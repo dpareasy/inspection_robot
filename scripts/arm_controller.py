@@ -5,7 +5,7 @@ import random
 from numpy import *
 from std_msgs.msg import Float64
 import actionlib
-from inspection_robot.msg import MoveArmAction, MoveArmFeedback, MoveArmResult, MarkerList
+from inspection_robot.msg import MoveArmAction, MoveArmFeedback, MoveArmResult, MarkerList, RoomConnection
 
 link1 = Float64()
 link2 = Float64()
@@ -21,6 +21,7 @@ class ArmControllerServer():
     def __init__(self):
         #self._action_name = name
         self.a_server = actionlib.SimpleActionServer("move_arm_as", MoveArmAction, execute_cb = self.execute_cb, auto_start = False)
+        #self.client = actionlib.SimpleActionClient('create_ontology', RoomConnection)
         self.a_server.start()
         self.marker_list = []
         self.marker_count = 0
@@ -32,6 +33,7 @@ class ArmControllerServer():
         marker_id = msg.markers
         print(marker_id)
         self.marker_list.append(marker_id)
+       
     """
         function to publish on the joint topics
     """
@@ -50,7 +52,7 @@ class ArmControllerServer():
         success = True
         feedback = MoveArmFeedback()
         result = MoveArmResult()
-
+        result.result = True
         if goal is None:
             print('no goal has been received')
             return
