@@ -32,7 +32,9 @@ class ArmControllerServer():
         marker_id = msg.markers
         print(marker_id)
         self.marker_list.append(marker_id)
-
+    """
+        function to publish on the joint topics
+    """
     def pub_position(self,joint1, joint2, joint3):
 
         link1.data = joint1
