@@ -1,0 +1,8 @@
+# Goal
+bool move
+---
+# Result
+bool result
+---
+#Feedback
+string pose_acquired
