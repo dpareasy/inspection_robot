@@ -6,6 +6,7 @@ from numpy import *
 from std_msgs.msg import Float64
 import actionlib
 from inspection_robot.msg import MoveArmAction, MoveArmFeedback, MoveArmResult, MarkerList, RoomConnection
+from inspection_robot.srv import *
 
 link1 = Float64()
 link2 = Float64()
@@ -26,6 +27,7 @@ class ArmControllerServer():
         self.marker_list = []
         self.marker_count = 0
         rospy.Subscriber("marker_detector/MarkerList", MarkerList, self.marker_cb)
+        self.send_id = rospy.ServiceProxy('/room_info', RoomInformation)
 
     def marker_cb(self, msg):
 
@@ -33,6 +35,18 @@ class ArmControllerServer():
         marker_id = msg.markers
         print(marker_id)
         self.marker_list.append(marker_id)
+        rospy.wait_for_service('/room_info')
+        try:
+            
+            response = self.send_id(marker_id)
+            room = response.room
+            print(room)
+            x_coord = response.x
+            y_coord = response.y
+            #array stating the connection and the door 
+            connected_to = response.connections
+        except rospy.ServiceException as e:
+            print("Service call failed")
        
     """
         function to publish on the joint topics

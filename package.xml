@@ -87,7 +87,6 @@
   <exec_depend>roscpp</exec_depend>
   <exec_depend>sensor_msgs</exec_depend>
   <exec_depend>rospy</exec_depend>
-  <exec_depend>surveillance_robot</exec_depend>
   <exec_depend>aruco</exec_depend>
   <exec_depend>nav_msgs</exec_depend>
   <exec_depend>message_runtime</exec_depend>
