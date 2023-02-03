@@ -2,7 +2,7 @@
 bool move
 ---
 # Result
-string[] location_list
+string[] individuals_list
 ---
 #Feedback
 string location

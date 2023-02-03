@@ -62,6 +62,7 @@ class LoadOntology(smach.State):
         #self._action_helper = action_helper
         State.__init__(self, outcomes = [TRANS_INITIALIZED])
         self.client = actionlib.SimpleActionClient('move_arm_as', MoveArmAction)
+        self.armor_client = ArmorClient("assignment", "my_ontology")
         self.client.wait_for_server()
         self.goal = MoveArmGoal()
         self.markers = []
@@ -92,7 +93,7 @@ class LoadOntology(smach.State):
         self.client.wait_for_result()
         result = self.client.get_result()
         print(result)
-
+        
         #print("Markers detected: ", self.markers)
 
         return TRANS_INITIALIZED

@@ -22,68 +22,84 @@ pub3 = rospy.Publisher('/insprob/joint3_position_controller/command', Float64, q
 global marker_id
 
 class ArmControllerServer():
+    """
+    This class is used to move the arm, receive the marker_id detected from the camera nd to create the ontolgy.
+    """
     def __init__(self):
-        #self._action_name = name
+        # Define the  action server
         self.a_server = actionlib.SimpleActionServer("move_arm_as", MoveArmAction, execute_cb = self.execute_cb, auto_start = False)
-        self.client = ArmorClient("assignment", "my_ontology")
-        #self.client = actionlib.SimpleActionClient('create_ontology', RoomConnection)
+        ######################
+        ## Set up for Armor ##
+        ######################
+        self.armor_client = ArmorClient("assignment", "my_ontology")
+        self.path = dirname(realpath(__file__))
+        # Put the path of the file.owl
+        self.path = self.path + "/../../topological_map/"
+        # Initializing with buffered manipulation and reasoning
+        self.armor_client.utils.load_ref_from_file(self.path + "topological_map.owl", "http://bnc/exp-rob-lab/2022-23", True, "PELLET", False, False)
+        self.armor_client.utils.mount_on_ref()
+        self.armor_client.utils.set_log_to_terminal(True)
+
+        # Define the subscriber to the topic in which the marker's id are published
+        rospy.Subscriber("marker_detector/MarkerList", MarkerList, self.marker_cb)
+        # Client connecting to marker_server to obtain environment's informations
+        self.send_id = rospy.ServiceProxy('/room_info', RoomInformation)
+        #Start the server
         self.a_server.start()
-        # Create the lists for storing markers, locations and room coordinates
+        ########################
+        ## All used variables ##
+        ########################
         self.marker_list = []
         self.location_list = []
         self.room_coord = []
         self.door_list = []
-        # Define the subscriber to the topic in which the marker's id are published
-        rospy.Subscriber("marker_detector/MarkerList", MarkerList, self.marker_cb)
-        self.send_id = rospy.ServiceProxy('/room_info', RoomInformation)
-        self.path = dirname(realpath(__file__))
-        # Put the path of the file.owl
-        self.path = self.path + "/../../topological_map/"
-
-        # Initializing with buffered manipulation and reasoning
-        self.client.utils.load_ref_from_file(self.path + "topological_map.owl", "http://bnc/exp-rob-lab/2022-23", True, "PELLET", False, False)
-
-        self.client.utils.mount_on_ref()
-        self.client.utils.set_log_to_terminal(True)
+        self.individuals_list = []
+        self.marker_id = None
+        
 
     def marker_cb(self, msg):
 
-        global marker_id 
-        
-        marker_id = msg.markers
-        print(marker_id)
+        self.marker_id = msg.markers
+        print(self.marker_id)
         
         # Making request to server 
         rospy.wait_for_service('/room_info')
 
         try:
-
-            response = self.send_id(marker_id)
+            response = self.send_id(self.marker_id)
             room = response.room
             print(room)
 
-            if room != 'no room associated with this marker id':
-                self.marker_list.append(marker_id)
+            if room != 'no room associated with this marker id' and room not in self.individuals_list:
+                self.marker_list.append(self.marker_id)
                 print(self.marker_list)
                 self.location_list.append(room)
-                self.client.manipulation.add_ind_to_class(room, "LOCATION")
-                self.client.manipulation.add_dataprop_to_ind("visitedAt", room, "Long", str(int(time.time())))
-                #self.client.utils.apply_buffered_changes()
-                #self.client.utils.sync_buffered_reasoner()
+                # append all rooms in the list of individuals
+                self.individuals_list.append(room)
+                self.armor_client.manipulation.add_ind_to_class(room, "LOCATION")
+                self.armor_client.manipulation.add_dataprop_to_ind("visitedAt", room, "Long", str(int(time.time())))
+                if room is 'E':
+                    self.armor_client.manipulation.add_objectprop_to_ind("isIn", "Robot1", room)
+                    print("Robot is in ", room)
+                
             
             x_coord = response.x
             y_coord = response.y
             self.room_coord = (x_coord, y_coord)
             print(self.room_coord)
-            #array stating the connection and the door
             
             for i in range(len(response.connections)):
                 connection = response.connections[i]
                 has_door = connection.through_door
-                self.client.manipulation.add_objectprop_to_ind('hasDoor', room, has_door)
+                # Adding doors to the ontology
+                self.armor_client.manipulation.add_objectprop_to_ind('hasDoor', room, has_door)
                 self.door_list.append(has_door)
+                # put doors in individuals list
+                if has_door not in self.individuals_list:
+                    self.individuals_list.append(has_door)
+                
                 print(room, " has door " , has_door)
-
+            print(self.individuals_list)
         except rospy.ServiceException as e:
             print("Service call failed")
        
@@ -105,7 +121,7 @@ class ArmControllerServer():
         success = True
         feedback = MoveArmFeedback()
         result = MoveArmResult()
-        result.location_list = self.location_list
+        result.individuals_list = self.individuals_list
         #feedback.locations = marker_id
 
         if goal is None:
@@ -130,6 +146,10 @@ class ArmControllerServer():
                 i = i + 1
 
         if success:
+            self.armor_client.manipulation.disjoint_all_ind(self.individuals_list)
+            self.armor_client.utils.apply_buffered_changes()
+            self.armor_client.utils.sync_buffered_reasoner()
+            print(self.individuals_list)
             self.a_server.set_succeeded(result)
 
 if __name__== '__main__':
