@@ -29,6 +29,7 @@ find_package(catkin REQUIRED COMPONENTS
   aruco
   aruco_msgs
   visualization_msgs
+  armor_py_api
 )
 
 ## System dependencies are found with CMake's conventions

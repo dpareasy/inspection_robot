@@ -54,7 +54,7 @@
   </group>
 
   <!-- these are the arguments you can pass this launch file, for example paused:=true -->
-	<arg name="model" default="$(find inspection_robot)/urdf/m2wr_arm2.xacro" />
+	<arg name="model" default="$(find inspection_robot)/urdf/robot_assignment.xacro" />
 
 <!-- Load the URDF into the ROS Parameter Server -->
 	<param name="robot_description" command="$(find xacro)/xacro --inorder $(arg model)" />

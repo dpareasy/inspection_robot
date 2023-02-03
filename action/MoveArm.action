@@ -2,7 +2,7 @@
 bool move
 ---
 # Result
-bool result
+string[] location_list
 ---
 #Feedback
-string pose_acquired
+string location
