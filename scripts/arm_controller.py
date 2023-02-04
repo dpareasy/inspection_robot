@@ -53,7 +53,9 @@ class ArmControllerServer():
         self.location_list = []
         self.room_coord = []
         self.door_list = []
+        self.rooms_info = []
         self.individuals_list = []
+        #self.rooms_info = empty((7,3))
         self.marker_id = None
         
 
@@ -73,6 +75,11 @@ class ArmControllerServer():
             if room != 'no room associated with this marker id' and room not in self.individuals_list:
                 self.marker_list.append(self.marker_id)
                 print(self.marker_list)
+                x_coord = response.x
+                y_coord = response.y
+                #self.room_coord.extend([room, x_coord, y_coord])
+                #self.rooms_info = vstack((self.rooms_info, self.room_coord))
+                print(self.rooms_info)
                 self.location_list.append(room)
                 # append all rooms in the list of individuals
                 self.individuals_list.append(room)
@@ -83,10 +90,7 @@ class ArmControllerServer():
                     print("Robot is in ", room)
                 
             
-            x_coord = response.x
-            y_coord = response.y
-            self.room_coord = (x_coord, y_coord)
-            print(self.room_coord)
+            
             
             for i in range(len(response.connections)):
                 connection = response.connections[i]
@@ -118,6 +122,7 @@ class ArmControllerServer():
     def execute_cb(self, goal):
         print(goal)
         positions = array([['pose0',0.0,0.0,0.0],['pose1',0.2,0.0,-0.7],['pose2',1.5,0.0,0.2],['pose3',1.5,0.0,-0.5],['pose4',2.2,0.0,0.2],['pose5',2.8,0.0,0.4],['pose6',-1.2,0,0.3],['pose7',-1.2,0,-0.5]])
+        print(positions)
         success = True
         feedback = MoveArmFeedback()
         result = MoveArmResult()

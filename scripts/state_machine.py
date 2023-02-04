@@ -18,7 +18,7 @@ import random
 import smach_ros
 import time
 import actionlib
-from inspection_robot.msg import MoveArmGoal, MoveArmAction, MoveArmActionFeedback
+from inspection_robot.msg import MoveArmGoal, MoveArmAction, MoveArmActionFeedback, MoveArmActionResult
 #from threading import Lock
 #from std_msgs.msg import Bool
 from smach import State #StateMachine, State
@@ -65,6 +65,7 @@ class LoadOntology(smach.State):
         self.armor_client = ArmorClient("assignment", "my_ontology")
         self.client.wait_for_server()
         self.goal = MoveArmGoal()
+        self.result = MoveArmActionResult()
         self.markers = []
 
     def feedback_cb(self, feedback):
@@ -91,9 +92,9 @@ class LoadOntology(smach.State):
         self.goal.move = True
         self.client.send_goal(self.goal, feedback_cb = self.feedback_cb)
         self.client.wait_for_result()
-        result = self.client.get_result()
-        print(result)
-        
+        self.result = self.client.get_result()
+        print(self.result.individuals_list)
+        print(self.result.individuals_list[2])
         #print("Markers detected: ", self.markers)
 
         return TRANS_INITIALIZED
