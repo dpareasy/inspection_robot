@@ -2,7 +2,7 @@
 bool move
 ---
 # Result
-string[] individuals_list
+string[] rooms_info
 ---
 #Feedback
-string location
+RoomCoord[] locations

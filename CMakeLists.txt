@@ -70,6 +70,7 @@ add_message_files(
    FILES
    MarkerList.msg
    RoomConnection.msg
+   RoomCoord.msg
  )
 
 ## Generate services in the 'srv' folder

@@ -6,7 +6,7 @@ import time
 from numpy import *
 from std_msgs.msg import Float64
 import actionlib
-from inspection_robot.msg import MoveArmAction, MoveArmFeedback, MoveArmResult, MarkerList, RoomConnection
+from inspection_robot.msg import MoveArmAction, MoveArmFeedback, MoveArmResult, MarkerList, RoomConnection, RoomCoord
 from armor_api.armor_client import ArmorClient
 from inspection_robot.srv import *
 from os.path import dirname, realpath
@@ -55,7 +55,9 @@ class ArmControllerServer():
         self.door_list = []
         self.rooms_info = []
         self.individuals_list = []
-        #self.rooms_info = empty((7,3))
+        self.room_coord = RoomCoord()
+        self.feedback = MoveArmFeedback()
+        self.result = MoveArmResult()
         self.marker_id = None
         
 
@@ -66,36 +68,43 @@ class ArmControllerServer():
         
         # Making request to server 
         rospy.wait_for_service('/room_info')
-
         try:
             response = self.send_id(self.marker_id)
             room = response.room
             print(room)
 
+            # reset the feedback list
+            self.feedback.locations = []
+
             if room != 'no room associated with this marker id' and room not in self.individuals_list:
                 self.marker_list.append(self.marker_id)
                 print(self.marker_list)
-                x_coord = response.x
-                y_coord = response.y
-                #self.room_coord.extend([room, x_coord, y_coord])
-                #self.rooms_info = vstack((self.rooms_info, self.room_coord))
-                print(self.rooms_info)
+                # saving room cooridnates in a variable of type RoomCoord
+                self.room_coord.room = room
+                self.room_coord.x = response.x
+                self.room_coord.y = response.y
+                # Send each information room as a feedback to the state machine
+                self.feedback.locations.append(self.room_coord) 
+                self.a_server.publish_feedback(self.feedback)
+
+                # print(self.rooms_info)
+                # update locatin list for the ontology 
                 self.location_list.append(room)
                 # append all rooms in the list of individuals
                 self.individuals_list.append(room)
+                # add individuals to class to create the ontolgy 
                 self.armor_client.manipulation.add_ind_to_class(room, "LOCATION")
+                # declare the new creted individuals as visted to make the timer start counting
                 self.armor_client.manipulation.add_dataprop_to_ind("visitedAt", room, "Long", str(int(time.time())))
-                if room is 'E':
+                # Set room E as the initial position
+                if room == 'E':
                     self.armor_client.manipulation.add_objectprop_to_ind("isIn", "Robot1", room)
                     print("Robot is in ", room)
-                
-            
-            
-            
+
             for i in range(len(response.connections)):
                 connection = response.connections[i]
                 has_door = connection.through_door
-                # Adding doors to the ontology
+                # Adding doors to the ontology for the connections
                 self.armor_client.manipulation.add_objectprop_to_ind('hasDoor', room, has_door)
                 self.door_list.append(has_door)
                 # put doors in individuals list
@@ -124,10 +133,7 @@ class ArmControllerServer():
         positions = array([['pose0',0.0,0.0,0.0],['pose1',0.2,0.0,-0.7],['pose2',1.5,0.0,0.2],['pose3',1.5,0.0,-0.5],['pose4',2.2,0.0,0.2],['pose5',2.8,0.0,0.4],['pose6',-1.2,0,0.3],['pose7',-1.2,0,-0.5]])
         print(positions)
         success = True
-        feedback = MoveArmFeedback()
-        result = MoveArmResult()
-        result.individuals_list = self.individuals_list
-        #feedback.locations = marker_id
+        self.result.rooms_info = self.rooms_info
 
         if goal is None:
             print('no goal has been received')
@@ -139,10 +145,9 @@ class ArmControllerServer():
                 success = False
                 break
 
-            epsilon = 0#random.uniform(0, 0.15)
+            #epsilon = random.uniform(0, 0.15)
             self.pub_position(float(positions[i][1]), float(positions[i][2]), float(positions[i][3]))
             #self.pub_position(float(positions[i][1]) + epsilon, float(positions[i][2]) + epsilon , float(positions[i][3]) + epsilon)
-            #self.a_server.publish_feedback(feedback)
             rospy.sleep(1)
 
             if i == 7:
@@ -155,7 +160,7 @@ class ArmControllerServer():
             self.armor_client.utils.apply_buffered_changes()
             self.armor_client.utils.sync_buffered_reasoner()
             print(self.individuals_list)
-            self.a_server.set_succeeded(result)
+            self.a_server.set_succeeded(self.result)
 
 if __name__== '__main__':
 

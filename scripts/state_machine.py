@@ -69,7 +69,9 @@ class LoadOntology(smach.State):
         self.markers = []
 
     def feedback_cb(self, feedback):
-        print('Feedback received: ', feedback)
+        room_info = feedback.locations[0]
+        room = room_info.room
+        print('Feedback received: ', room)
     
     def markers_callback(self, msg):
         self.markers = msg.markers
@@ -93,8 +95,8 @@ class LoadOntology(smach.State):
         self.client.send_goal(self.goal, feedback_cb = self.feedback_cb)
         self.client.wait_for_result()
         self.result = self.client.get_result()
-        print(self.result.individuals_list)
-        print(self.result.individuals_list[2])
+        print(self.result.rooms_info)
+        #print(self.result.individuals_list[2])
         #print("Markers detected: ", self.markers)
 
         return TRANS_INITIALIZED
