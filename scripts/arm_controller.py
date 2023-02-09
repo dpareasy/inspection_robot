@@ -1,4 +1,24 @@
 #!/usr/bin/env python3
+"""
+.. module:: my_state_machine
+   :platform: Unix
+   :synopsis: Python module for Moving the arm and create the ontology
+
+.. moduleauthor:: Davide Leo Parisi <davide.parisi1084@gmail.com>
+
+ROS node for moving a robotic arm and creating the ontology
+
+Service:
+    /move_arm_as: server for moving the arm
+
+Publishes:
+    /insprob/joint1_position_controller/command
+    /insprob/joint2_position_controller/command
+    /insprob/joint3_position_controller/command
+
+Subscribes:
+    /marker_detector/MarkerList
+"""
 
 import rospy
 import random
@@ -28,6 +48,7 @@ class ArmControllerServer():
     def __init__(self):
         # Define the  action server
         self.a_server = actionlib.SimpleActionServer("move_arm_as", MoveArmAction, execute_cb = self.execute_cb, auto_start = False)
+        
         ######################
         ## Set up for Armor ##
         ######################
@@ -62,11 +83,15 @@ class ArmControllerServer():
         
 
     def marker_cb(self, msg):
+        """
+            This callback takes the informations aboud the id of the aruco markers. Then it makes the request to the marker server to get informations about the rooms.
+            Then it creates the ontology.
+        """
 
         self.marker_id = msg.markers
         print(self.marker_id)
         
-        # Making request to server 
+        # Making request to server
         rospy.wait_for_service('/room_info')
         try:
             response = self.send_id(self.marker_id)
@@ -84,15 +109,15 @@ class ArmControllerServer():
                 self.room_coord.x = response.x
                 self.room_coord.y = response.y
                 # Send each information room as a feedback to the state machine
-                self.feedback.locations.append(self.room_coord) 
+                self.feedback.locations.append(self.room_coord)
                 self.a_server.publish_feedback(self.feedback)
 
                 # print(self.rooms_info)
-                # update locatin list for the ontology 
+                # update locatin list for the ontology
                 self.location_list.append(room)
                 # append all rooms in the list of individuals
                 self.individuals_list.append(room)
-                # add individuals to class to create the ontolgy 
+                # add individuals to class to create the ontolgy
                 self.armor_client.manipulation.add_ind_to_class(room, "LOCATION")
                 # declare the new creted individuals as visted to make the timer start counting
                 self.armor_client.manipulation.add_dataprop_to_ind("visitedAt", room, "Long", str(int(time.time())))
@@ -116,10 +141,12 @@ class ArmControllerServer():
         except rospy.ServiceException as e:
             print("Service call failed")
        
-    """
-        function to publish on the topics of the three joints
-    """
+    
     def pub_position(self,joint1, joint2, joint3):
+        """
+        function to publish on the topics of the three joints.
+        This function makes the arm moving in different positions to detect aruco markers. It goes through poses until all the markers have been detected.
+        """
 
         link1.data = joint1
         link2.data = joint2

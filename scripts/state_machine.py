@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 """
 .. module:: my_state_machine
    :platform: Unix
@@ -25,9 +26,9 @@ from smach import State #StateMachine, State
 from helper import InterfaceHelper, ActionClientHelper
 from robot_actions import BehaviorHelper
 from inspection_robot.msg import MarkerList
-#from load_ontology import CreateMap
 from Assignment1.msg import Point, ControlGoal, PlanGoal
 from armor_api.armor_client import ArmorClient
+
 client = ArmorClient("assignment", "my_ontology") 
 
 #list of states in the machine
@@ -60,21 +61,28 @@ class LoadOntology(smach.State):
     def __init__(self):
 
         #self._action_helper = action_helper
-        State.__init__(self, outcomes = [TRANS_INITIALIZED])
+        smach.State.__init__(self, outcomes = [TRANS_INITIALIZED], output_keys = ['rooms'], input_keys=['rooms'])
         self.client = actionlib.SimpleActionClient('move_arm_as', MoveArmAction)
         self.armor_client = ArmorClient("assignment", "my_ontology")
         self.client.wait_for_server()
         self.goal = MoveArmGoal()
         self.result = MoveArmActionResult()
         self.markers = []
+        self.rooms = dict()
+        self.room = None
+        self.x_coord = None
+        self.y_coord = None
 
     def feedback_cb(self, feedback):
         room_info = feedback.locations[0]
-        room = room_info.room
-        print('Feedback received: ', room)
+        self.room = room_info.room
+        self.x_coord = room_info.x
+        self.y_coord = room_info.y
+        self.rooms[self.room] = (self.x_coord, self.y_coord)
+        print('Feedback received: ', self.room, self.x_coord, self.y_coord)
     
-    def markers_callback(self, msg):
-        self.markers = msg.markers
+    #def markers_callback(self, msg):
+    #    self.markers = msg.markers
 
     def execute(self, userdata):
         """
@@ -98,9 +106,10 @@ class LoadOntology(smach.State):
         print(self.result.rooms_info)
         #print(self.result.individuals_list[2])
         #print("Markers detected: ", self.markers)
+        userdata.rooms = self.rooms
+        print(userdata.rooms['E'])
 
         return TRANS_INITIALIZED
-    
 
 class DecideTarget(smach.State):
     """
@@ -114,7 +123,7 @@ class DecideTarget(smach.State):
         self._behavior = behavior_helper
         # Get the environment size from ROS parameters.
         self.environment_size = rospy.get_param('config/environment_size')
-        State.__init__(self, outcomes = [TRANS_RECHARGING, TRANS_DECIDED], output_keys = ['current_pose', 'choice', 'list_of_corridors', 'random_plan'])
+        smach.State.__init__(self, outcomes = [TRANS_RECHARGING, TRANS_DECIDED], input_keys = ['rooms'], output_keys = ['current_pose', 'choice', 'list_of_corridors', 'random_plan'])
 
     def execute(self, userdata):
         """
@@ -142,6 +151,8 @@ class DecideTarget(smach.State):
         goal.target = Point(x = random.uniform(0, self.environment_size[0]),
                             y = random.uniform(0, self.environment_size[1]))
         current_pose, choice, list_of_corridors = self._behavior.decide_target()
+        print(choice)
+        
         userdata.current_pose = current_pose
         userdata.choice = choice
         userdata.list_of_corridors = list_of_corridors
@@ -177,7 +188,7 @@ class MoveToTarget(smach.State):
         self._helper = interface_helper
         self._behavior = behavior_helper
 
-        State.__init__(self, outcomes = [TRANS_RECHARGING, TRANS_MOVED], input_keys = [ "random_plan",'current_pose', 'choice', 'list_of_corridors'], output_keys = ['current_pose'])
+        smach.State.__init__(self, outcomes = [TRANS_RECHARGING, TRANS_MOVED], input_keys = ['rooms', "random_plan",'current_pose', 'choice', 'list_of_corridors'], output_keys = ['current_pose'])
 
     def execute(self, userdata):
         """
@@ -204,11 +215,17 @@ class MoveToTarget(smach.State):
         """
         ControlGoal: via points to reach the goal 
         """
-        self._helper.controller_client.send_goal(goal)
+
         current_pose = userdata.current_pose
         choice = userdata.choice
         list_of_corridors = userdata.list_of_corridors
 
+        # take the dictionary as an input
+        room_coordinates = userdata.rooms[choice]
+        print("The position to reach is ", room_coordinates)
+
+        self._helper.controller_client.send_goal(goal)
+        
         while not rospy.is_shutdown():
             # Acquire the mutex to assure data consistencies with the ROS subscription threads managed by `self._helper`.
             self._helper.mutex.acquire()
@@ -239,7 +256,7 @@ class Surveying(State):
         self._helper = interface_helper
         self._behavior = behavior_helper
         # Initialise this state with possible transitions (i.e., valid outputs of the `execute` function).
-        State.__init__(self, outcomes = [TRANS_RECHARGING, TRANS_SURVEYED], input_keys = ['current_pose'])
+        smach.State.__init__(self, outcomes = [TRANS_RECHARGING, TRANS_SURVEYED], input_keys = ['current_pose'])
 
     # Define the function performed each time a transition is such to enter in this state.
     # Note that the input parameter `userdata` is not used since no data is required from the other states.
@@ -292,7 +309,7 @@ class Recharging(State):
         self._helper = interface_helper
         self._behavior = behavior_helper
         # Initialise this state with possible transitions (i.e., valid outputs of the `execute` function).
-        State.__init__(self, outcomes = [TRANS_RECHARGED])
+        smach.State.__init__(self, outcomes = [TRANS_RECHARGED])
 
     # Define the function performed each time a transition is such to enter in this state.
     # Note that the input parameter `userdata` is not used since no data is required from the other states.
@@ -342,7 +359,7 @@ def main():
         smach.StateMachine.add(STATE_INIT, LoadOntology(),
                          transitions = {TRANS_INITIALIZED: STATE_NORMAL})
         
-        sm_normal = smach.StateMachine(outcomes=[TRANS_BATTERY_LOW])
+        sm_normal = smach.StateMachine(outcomes=[TRANS_BATTERY_LOW], input_keys = ['rooms'])
 
         with sm_normal:
             smach.StateMachine.add(STATE_DECISION, DecideTarget(helper, behavior),

@@ -167,6 +167,7 @@ add_dependencies(marker_detector ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EX
 ## Specify libraries to link a library or executable target against
  target_link_libraries(marker_server ${catkin_LIBRARIES})
  target_link_libraries(marker_detector ${catkin_LIBRARIES} ${OpenCV_LIBS} ${aruco_LIBS} ${PKG_CONFIG_LIBRARIES})
+ 
 #############
 ## Install ##
 #############
