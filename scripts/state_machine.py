@@ -25,8 +25,7 @@ from inspection_robot.msg import MoveArmGoal, MoveArmAction, MoveArmActionFeedba
 from smach import State #StateMachine, State
 from helper import InterfaceHelper, ActionClientHelper
 from robot_actions import BehaviorHelper
-from inspection_robot.msg import MarkerList
-from Assignment1.msg import Point, ControlGoal, PlanGoal
+from inspection_robot.msg import MarkerList, Point, ControlGoal, PlanGoal
 from armor_api.armor_client import ArmorClient
 
 client = ArmorClient("assignment", "my_ontology") 

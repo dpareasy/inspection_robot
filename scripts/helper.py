@@ -27,8 +27,8 @@ from armor_api.armor_client import ArmorClient
 
 # Import ROS-based messages.
 from std_msgs.msg import Bool
-from Assignment1.msg import PlanAction, ControlAction
-from Assignment1.srv import SetPose
+from inspection_robot.msg import PlanAction, ControlAction
+from inspection_robot.srv import SetPose
 
 client = ArmorClient("assignment", "my_ontology")
 

@@ -20,8 +20,8 @@ import threading
 import rospy
 from std_msgs.msg import Bool
 from helper import InterfaceHelper
-from Assignment1.msg import Point
-from Assignment1.srv import GetPose, GetPoseResponse, SetPose, SetPoseResponse
+from inspection_robot.msg import Point
+from inspection_robot.srv import GetPose, GetPoseResponse, SetPose, SetPoseResponse
 
 class RobotState:
     """
