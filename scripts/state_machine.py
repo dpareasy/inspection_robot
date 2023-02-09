@@ -208,6 +208,12 @@ class MoveToTarget(smach.State):
 
         """
         # Get the plan to a random position computed by the `PLAN_TO_RANDOM_POSE` state.
+        #plan = userdata.random_plan
+        # Start the action server for moving the robot through the planned via-points.
+        #goal = ControlGoal()
+        #coords = Point()
+
+        # Get the plan to a random position computed by the `PLAN_TO_RANDOM_POSE` state.
         plan = userdata.random_plan
         # Start the action server for moving the robot through the planned via-points.
         goal = ControlGoal(via_points = plan)
@@ -215,13 +221,18 @@ class MoveToTarget(smach.State):
         ControlGoal: via points to reach the goal 
         """
 
+
         current_pose = userdata.current_pose
         choice = userdata.choice
         list_of_corridors = userdata.list_of_corridors
 
         # take the dictionary as an input
         room_coordinates = userdata.rooms[choice]
-        print("The position to reach is ", room_coordinates)
+        print(room_coordinates)
+        #coords.x = room_coordinates[0]
+        #coords.y = room_coordinates[1]
+        #goal.target_point = Point(x = room_coordinates[0], y = room_coordinates[1])
+        #print("The position to reach is ", goal)
 
         self._helper.controller_client.send_goal(goal)
         

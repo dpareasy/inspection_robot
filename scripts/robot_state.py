@@ -43,7 +43,7 @@ class RobotState:
         # Start publisher on a separate thread.
         th = threading.Thread(target = self.is_battery_low_)
         th.start()
-    
+
     def set_pose(self, request):
         """
         The `robot/set_pose` service implementation.

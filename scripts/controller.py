@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 
 import random
 import rospy
@@ -10,7 +10,6 @@ from inspection_robot.srv import SetPose
 import inspection_robot # This is required to pass the `PlanAction` type for instantiating the `SimpleActionServer`.
 
 # A tag for identifying logs producer.
-LOG_TAG = anm.NODE_CONTROLLER
 
 # An action server to simulate motion controlling.
 # Given a plan as a set of via points, it simulate the movements
@@ -42,36 +41,37 @@ class ControllingAction(object):
             print('no goal has been received')
             self._as.set_aborted()
             return
-
+        target = goal.target_point
+        print(target)
         # Construct the feedback and loop for each via point.
-        feedback = ControlFeedback()
-        print('Server is controlling')
+            #feedback = ControlFeedback()
+            #print('Server is controlling')
         #rospy.loginfo(anm.tag_log('Server is controlling...', LOG_TAG))
 
-        # Check that the client did not cancel this service.
-        if self._as.is_preempt_requested():
-            print('Service has been cancelled by the client!')
-            # Here implement the cance Goal
-            # Actually cancel this service.
-            self._as.set_preempted()
-            return
+            # Check that the client did not cancel this service.
+            #if self._as.is_preempt_requested():
+            #    print('Service has been cancelled by the client!')
+                # Here implement the cance Goal
+                # Actually cancel this service.
+            #    self._as.set_preempted()
+            #    return
         
         #
         
-        # Publish a feedback to the client to simulate that a via point has been reached. 
-        feedback.reached_point = point
-        self._as.publish_feedback(feedback)
+            # Publish a feedback to the client to simulate that a via point has been reached. 
+            #feedback.reached_point = point
+            #self._as.publish_feedback(feedback)
 
 
-        # Publish the results to the client.
-        result = ControlResult()
-        result.reached_point = feedback.reached_point
+            # Publish the results to the client.
+            #result = ControlResult()
+            #result.reached_point = feedback.reached_point
 
-        return  # Succeeded.
+            #return  # Succeeded.
 
 
 if __name__ == '__main__':
     # Initialise the node, its action server, and wait.   
-    rospy.init_node(anm.NODE_CONTROLLER, log_level=rospy.INFO)
+    rospy.init_node('controller', log_level=rospy.INFO)
     server = ControllingAction()
     rospy.spin()

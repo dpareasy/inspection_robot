@@ -4,6 +4,7 @@
 
 # The plan as a set of points to reach.
 Point[] via_points
+#Point target_point
 
 ---
 
@@ -17,4 +18,5 @@ Point reached_point
 ### Action Server Feedback
 
 # The last `via_point` reached so far.
+#string feedback
 Point reached_point
