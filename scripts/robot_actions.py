@@ -146,6 +146,7 @@ class BehaviorHelper:
             for i in range (len(reachable_urgent)):
                 choice_last_visit = client.query.dataprop_b2_ind('visitedAt', reachable_urgent[i])
                 choice_last_visit = self.clean_strings(2, choice_last_visit)
+                print(reachable_urgent[i], ": ", choice_last_visit)
                 if choice_last_visit <= oldest:
                     target = reachable_urgent[i]
         print(simple_colors.green("TARGET " + target + " ACQUIRED\n\n"))
@@ -164,18 +165,20 @@ class BehaviorHelper:
         """
         
 
-        if chosen_target not in list_of_corridors:
-            last_visit = client.query.dataprop_b2_ind('visitedAt', chosen_target)
-            last_visit = self.clean_strings(2, last_visit)
+        #if chosen_target not in list_of_corridors:
+        last_visit = client.query.dataprop_b2_ind('visitedAt', chosen_target)
+        last_visit = self.clean_strings(2, last_visit)
 
         client.manipulation.replace_objectprop_b2_ind('isIn', self.agent, chosen_target, current_pose)
         client.utils.sync_buffered_reasoner()
         last_change = client.query.dataprop_b2_ind('now', self.agent)
         last_change = self.clean_strings(2, last_change)
         current_time = str(int(time.time()))
-
-        if chosen_target not in list_of_corridors:
-            client.manipulation.replace_dataprop_b2_ind('visitedAt', chosen_target, 'Long', current_time, last_visit)
+        print(list_of_corridors)
+        print(chosen_target)
+        #if chosen_target not in list_of_corridors:
+        client.manipulation.replace_dataprop_b2_ind('visitedAt', chosen_target, 'Long', current_time, last_visit)
+        print(chosen_target, "last visit", last_visit, "current time ", current_time)
 
         client.manipulation.replace_dataprop_b2_ind('now', self.agent, 'Long', current_time, last_change)
         client.utils.sync_buffered_reasoner()

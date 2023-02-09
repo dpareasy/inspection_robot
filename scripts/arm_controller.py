@@ -118,19 +118,24 @@ class ArmControllerServer():
                 # append all rooms in the list of individuals
                 self.individuals_list.append(room)
                 # add individuals to class to create the ontolgy
-                self.armor_client.manipulation.add_ind_to_class(room, "LOCATION")
+                
                 # declare the new creted individuals as visted to make the timer start counting
-                self.armor_client.manipulation.add_dataprop_to_ind("visitedAt", room, "Long", str(int(time.time())))
+                if room != 'E':
+                    self.armor_client.manipulation.add_ind_to_class(room, "LOCATION")
+                    print(" Room ", room, " Added to locations")
+                    self.armor_client.manipulation.add_dataprop_to_ind("visitedAt", room, "Long", str(int(time.time())))
                 # Set room E as the initial position
-                if room == 'E':
+                else:
+                    self.armor_client.manipulation.add_ind_to_class(room, "LOCATION")
                     self.armor_client.manipulation.add_objectprop_to_ind("isIn", "Robot1", room)
                     print("Robot is in ", room)
 
-            for i in range(len(response.connections)):
-                connection = response.connections[i]
+            for connection in response.connections:
                 has_door = connection.through_door
+                self.armor_client.manipulation.add_ind_to_class(has_door, "DOOR")
                 # Adding doors to the ontology for the connections
                 self.armor_client.manipulation.add_objectprop_to_ind('hasDoor', room, has_door)
+                print("room ", room, "has door", has_door)
                 self.door_list.append(has_door)
                 # put doors in individuals list
                 if has_door not in self.individuals_list:
