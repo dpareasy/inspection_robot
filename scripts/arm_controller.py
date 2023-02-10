@@ -49,9 +49,9 @@ class ArmControllerServer():
         # Define the  action server
         self.a_server = actionlib.SimpleActionServer("move_arm_as", MoveArmAction, execute_cb = self.execute_cb, auto_start = False)
         
-        ######################
-        ## Set up for Armor ##
-        ######################
+                                    ######################
+                                    ## Set up for Armor ##
+        ###########################################################################
         self.armor_client = ArmorClient("assignment", "my_ontology")
         self.path = dirname(realpath(__file__))
         # Put the path of the file.owl
@@ -60,16 +60,14 @@ class ArmControllerServer():
         self.armor_client.utils.load_ref_from_file(self.path + "topological_map.owl", "http://bnc/exp-rob-lab/2022-23", True, "PELLET", False, False)
         self.armor_client.utils.mount_on_ref()
         self.armor_client.utils.set_log_to_terminal(True)
-
         # Define the subscriber to the topic in which the marker's id are published
         rospy.Subscriber("marker_detector/MarkerList", MarkerList, self.marker_cb)
         # Client connecting to marker_server to obtain environment's informations
         self.send_id = rospy.ServiceProxy('/room_info', RoomInformation)
         #Start the server
         self.a_server.start()
-        ########################
-        ## All used variables ##
-        ########################
+
+        # Definition of used variables
         self.marker_list = []
         self.location_list = []
         self.room_coord = []
@@ -80,8 +78,10 @@ class ArmControllerServer():
         self.feedback = MoveArmFeedback()
         self.result = MoveArmResult()
         self.marker_id = None
-        
 
+                                #####################
+                                ## Create Ontology ##
+    ###############################################################################
     def marker_cb(self, msg):
         """
             This callback takes the informations aboud the id of the aruco markers. Then it makes the request to the marker server to get informations about the rooms.
@@ -111,20 +111,16 @@ class ArmControllerServer():
                 # Send each information room as a feedback to the state machine
                 self.feedback.locations.append(self.room_coord)
                 self.a_server.publish_feedback(self.feedback)
-
-                # print(self.rooms_info)
                 # update locatin list for the ontology
                 self.location_list.append(room)
                 # append all rooms in the list of individuals
                 self.individuals_list.append(room)
                 # add individuals to class to create the ontolgy
-                
                 # declare the new creted individuals as visted to make the timer start counting
                 if room != 'E':
                     self.armor_client.manipulation.add_ind_to_class(room, "LOCATION")
                     print(" Room ", room, " Added to locations")
                     self.armor_client.manipulation.add_dataprop_to_ind("visitedAt", room, "Long", str(int(time.time())))
-                # Set room E as the initial position
                 else:
                     self.armor_client.manipulation.add_ind_to_class(room, "LOCATION")
                     self.armor_client.manipulation.add_objectprop_to_ind("isIn", "Robot1", room)
@@ -145,7 +141,7 @@ class ArmControllerServer():
             print(self.individuals_list)
         except rospy.ServiceException as e:
             print("Service call failed")
-       
+    
     
     def pub_position(self,joint1, joint2, joint3):
         """
@@ -160,6 +156,9 @@ class ArmControllerServer():
         pub2.publish(link2)
         pub3.publish(link3)
 
+                                    ###############
+                                    ### Move Arm ##
+    ###############################################################################
     def execute_cb(self, goal):
         print(goal)
         positions = array([['pose0',0.0,0.0,0.0],['pose1',0.2,0.0,-0.7],['pose2',1.5,0.0,0.2],['pose3',1.5,0.0,-0.5],['pose4',2.2,0.0,0.2],['pose5',2.8,0.0,0.4],['pose6',-1.2,0,0.3],['pose7',-1.2,0,-0.5]])

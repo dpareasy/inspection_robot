@@ -19,6 +19,7 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
   message_runtime
   nav_msgs
+  nav_core
   sensor_msgs
   std_msgs
   tf

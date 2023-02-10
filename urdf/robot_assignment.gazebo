@@ -76,29 +76,64 @@
 		</sensor>
 	</gazebo>
  
-	<gazebo>
-		<plugin filename="libgazebo_ros_diff_drive.so" name="differential_drive_controller">
-			<legacyMode>true</legacyMode>
-			<alwaysOn>true</alwaysOn>
-			<updateRate>20</updateRate>
-			<leftJoint>joint_left_wheel</leftJoint>
-			<rightJoint>joint_right_wheel</rightJoint>
-			<wheelSeparation>0.3</wheelSeparation>
-			<wheelDiameter>0.2</wheelDiameter>
-			<torque>0.1</torque>
-			<commandTopic>cmd_vel</commandTopic>
-			<odometryTopic>odom</odometryTopic>
-			<odometryFrame>odom</odometryFrame>
-			<robotBaseFrame>base_link</robotBaseFrame>
-			<rosDebugLevel>na</rosDebugLevel>
-			<publishWheelTF>true</publishWheelTF>
-			<publishWheelJointState>true</publishWheelJointState>
-			<wheelAcceleration>0</wheelAcceleration>
-			<wheelTorque>5</wheelTorque>
-			<odometrySource>1</odometrySource>
-			<publishTf>1</publishTf>
-		</plugin>
-	</gazebo>
+	<!-- Planar Move -->  
+  <!-- <gazebo>
+    <plugin name="object_controller" filename="libgazebo_ros_planar_move.so">
+      <commandTopic>cmd_vel</commandTopic>
+      <odometryTopic>odom</odometryTopic>
+      <odometryFrame>odom</odometryFrame>
+      <odometryRate>20.0</odometryRate>
+      <robotBaseFrame>base_link</robotBaseFrame>
+    </plugin>
+  </gazebo> -->
+
+<!-- Diff drive -->
+  <gazebo>
+    <plugin filename="libgazebo_ros_diff_drive.so" name="differential_drive_controller">
+	  <legacyMode>true</legacyMode>
+      <alwaysOn>true</alwaysOn>
+      <updateRate>20</updateRate>
+      <leftJoint>joint_right_wheel</leftJoint>
+      <rightJoint>joint_left_wheel</rightJoint>
+      <wheelSeparation>0.3</wheelSeparation>
+      <wheelDiameter>0.2</wheelDiameter>
+      <torque>2.0</torque>
+      <commandTopic>cmd_vel</commandTopic>
+      <odometryTopic>odom</odometryTopic>
+      <odometryFrame>odom</odometryFrame>
+      <robotBaseFrame>base_link</robotBaseFrame>
+      <rosDebugLevel>na</rosDebugLevel>
+      <publishWheelTF>true</publishWheelTF>
+      <publishWheelJointState>true</publishWheelJointState>
+      <wheelAcceleration>0</wheelAcceleration>
+      <wheelTorque>5</wheelTorque>
+      <odometrySource>1</odometrySource>
+      <publishTf>1</publishTf>
+    </plugin>
+  </gazebo>
+
+
+  <!-- <gazebo>
+  <plugin name="differential_drive_controller" filename="libgazebo_ros_diff_drive.so">
+
+    <updateRate>50</updateRate>
+    <leftJoint>joint_left_wheel</leftJoint>
+    <rightJoint>joint_right_wheel</rightJoint>
+    <wheelSeparation>0.31414</wheelSeparation>
+    <wheelDiameter>0.2</wheelDiameter>
+    <wheelAcceleration>3.0</wheelAcceleration>
+    <wheelTorque>20</wheelTorque>
+    <commandTopic>cmd_vel</commandTopic>
+    <odometryTopic>odom</odometryTopic>
+    <odometryFrame>odom</odometryFrame>
+    <robotBaseFrame>base_link</robotBaseFrame>
+    <odometrySource>1</odometrySource>
+    <publishWheelTF>true</publishWheelTF>
+    <publishOdom>true</publishOdom>
+    <publishWheelJointState>true</publishWheelJointState>
+    <legacyMode>false</legacyMode>
+  </plugin>
+</gazebo> -->
 
 	<gazebo reference="laser">
 		<sensor type="ray" name="head_hokuyo_sensor">

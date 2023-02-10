@@ -19,12 +19,14 @@ import random
 import smach_ros
 import time
 import actionlib
+import actionlib.msg
 from inspection_robot.msg import MoveArmGoal, MoveArmAction, MoveArmActionFeedback, MoveArmActionResult
 #from threading import Lock
 #from std_msgs.msg import Bool
 from smach import State #StateMachine, State
 from helper import InterfaceHelper, ActionClientHelper
 from robot_actions import BehaviorHelper
+from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
 from inspection_robot.msg import MarkerList, Point, ControlGoal, PlanGoal
 from armor_api.armor_client import ArmorClient
 
@@ -122,7 +124,7 @@ class DecideTarget(smach.State):
         self._behavior = behavior_helper
         # Get the environment size from ROS parameters.
         self.environment_size = rospy.get_param('config/environment_size')
-        smach.State.__init__(self, outcomes = [TRANS_RECHARGING, TRANS_DECIDED], input_keys = ['rooms'], output_keys = ['current_pose', 'choice', 'list_of_corridors', 'random_plan'])
+        smach.State.__init__(self, outcomes = [TRANS_RECHARGING, TRANS_DECIDED], input_keys = ['rooms'], output_keys = ['current_pose', 'choice', 'list_of_corridors'])
 
     def execute(self, userdata):
         """
@@ -143,12 +145,12 @@ class DecideTarget(smach.State):
 
         """
         # Define a random point to be reached through some via-points to be planned.
-        goal = PlanGoal()
+        #goal = PlanGoal()
         """
         PlanGoal: goal position
         """
-        goal.target = Point(x = random.uniform(0, self.environment_size[0]),
-                            y = random.uniform(0, self.environment_size[1]))
+        #goal.target = Point(x = random.uniform(0, self.environment_size[0]),
+        #                    y = random.uniform(0, self.environment_size[1]))
         current_pose, choice, list_of_corridors = self._behavior.decide_target()
         print(choice)
         
@@ -156,26 +158,27 @@ class DecideTarget(smach.State):
         userdata.choice = choice
         userdata.list_of_corridors = list_of_corridors
         # Invoke the planner action server.
-        self._helper.planner_client.send_goal(goal)
+        #self._helper.planner_client.send_goal(goal)
         while not rospy.is_shutdown():
             # Acquire the mutex to assure data consistencies with the ROS subscription threads managed by `self._helper`.
             self._helper.mutex.acquire()
             try:
                 # If the battery is low, then cancel the control action server and take the `battery_low` transition.
                 if self._helper.is_battery_low():  # Higher priority
-                    self._helper.planner_client.cancel_goals()
+                    #self._helper.planner_client.cancel_goals()
                     self._behavior.go_to_recharge(current_pose)
                     return TRANS_RECHARGING
                 # If the controller finishes its computation, then take the `went_random_pose` transition, which is related to the `repeat` transition.
-                if self._helper.planner_client.is_done():
-                    userdata.random_plan = self._helper.planner_client.get_results().via_points
+                #if self._helper.planner_client.is_done():
+                #    userdata.random_plan = self._helper.planner_client.get_results().via_points
+                else:
                     return TRANS_DECIDED
 
             finally:
                 # Release the mutex to unblock the `self._helper` subscription threads if they are waiting.
                 self._helper.mutex.release()
             # Wait for a reasonably small amount of time to allow `self._helper` processing stimulus (eventually).
-            rospy.sleep(LOOP_SLEEP_TIME)
+            #rospy.sleep(LOOP_SLEEP_TIME)
 
 class MoveToTarget(smach.State):
     """
@@ -186,8 +189,10 @@ class MoveToTarget(smach.State):
         # Get a reference to the interfaces with the other nodes of the architecture.
         self._helper = interface_helper
         self._behavior = behavior_helper
+        self.move_base_client = actionlib.SimpleActionClient('/move_base',MoveBaseAction)
+        
 
-        smach.State.__init__(self, outcomes = [TRANS_RECHARGING, TRANS_MOVED], input_keys = ['rooms', "random_plan",'current_pose', 'choice', 'list_of_corridors'], output_keys = ['current_pose'])
+        smach.State.__init__(self, outcomes = [TRANS_RECHARGING, TRANS_MOVED], input_keys = ['rooms','current_pose', 'choice', 'list_of_corridors'], output_keys = ['current_pose'])
 
     def execute(self, userdata):
         """
@@ -207,20 +212,12 @@ class MoveToTarget(smach.State):
             TRANS_MOVED(str): transition to STATE_SURVEY.
 
         """
-        # Get the plan to a random position computed by the `PLAN_TO_RANDOM_POSE` state.
-        #plan = userdata.random_plan
-        # Start the action server for moving the robot through the planned via-points.
-        #goal = ControlGoal()
-        #coords = Point()
 
-        # Get the plan to a random position computed by the `PLAN_TO_RANDOM_POSE` state.
-        plan = userdata.random_plan
-        # Start the action server for moving the robot through the planned via-points.
-        goal = ControlGoal(via_points = plan)
         """
         ControlGoal: via points to reach the goal 
         """
 
+        robot_goal = MoveBaseGoal()
 
         current_pose = userdata.current_pose
         choice = userdata.choice
@@ -228,13 +225,15 @@ class MoveToTarget(smach.State):
 
         # take the dictionary as an input
         room_coordinates = userdata.rooms[choice]
-        print(room_coordinates)
-        #coords.x = room_coordinates[0]
-        #coords.y = room_coordinates[1]
-        #goal.target_point = Point(x = room_coordinates[0], y = room_coordinates[1])
-        #print("The position to reach is ", goal)
-
-        self._helper.controller_client.send_goal(goal)
+        #print(room_coordinates)
+        
+        robot_goal.target_pose.header.frame_id = "map"
+        robot_goal.target_pose.header.stamp = rospy.Time.now()
+        robot_goal.target_pose.pose.orientation.w = 1
+        robot_goal.target_pose.pose.position.x = room_coordinates[0]
+        robot_goal.target_pose.pose.position.y = room_coordinates[1]
+        print(robot_goal)
+        self.move_base_client.send_goal(robot_goal)
         
         while not rospy.is_shutdown():
             # Acquire the mutex to assure data consistencies with the ROS subscription threads managed by `self._helper`.
@@ -242,11 +241,11 @@ class MoveToTarget(smach.State):
             try:
                 # If the battery is low, then cancel the control action server and take the `battery_low` transition.
                 if self._helper.is_battery_low():  # Higher priority
-                    self._helper.controller_client.cancel_goals()
+                    self.move_base_client.cancel_goal()
                     self._behavior.go_to_recharge(current_pose)
                     return TRANS_RECHARGING
                 # If the controller finishes its computation, then take the `went_random_pose` transition, which is related to the `repeat` transition.
-                if self._helper.controller_client.is_done():
+                if self.move_base_client.get_state() == actionlib.GoalStatus.SUCCEEDED:
                     self._behavior.move_to_target(choice, current_pose, list_of_corridors)
                     userdata.current_pose = choice
                     return TRANS_MOVED
@@ -254,6 +253,7 @@ class MoveToTarget(smach.State):
                 # Release the mutex to unblock the `self._helper` subscription threads if they are waiting.
                 self._helper.mutex.release()
             # Wait for a reasonably small amount of time to allow `self._helper` processing stimulus (eventually).
+            #print("sto qui")
             rospy.sleep(LOOP_SLEEP_TIME)
 
 class Surveying(State):

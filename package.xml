@@ -66,6 +66,8 @@
   <build_depend>opencv2</build_depend>
   <build_depend>smach</build_depend>
   <build_depend>image_transport</build_depend>
+  <build_depend>move_base_msgs</build_depend>
+
 
   <build_export_depend>roscpp</build_export_depend>
   <build_export_depend>rospy</build_export_depend>
@@ -93,6 +95,7 @@
   <exec_depend>armor</exec_depend>
   <exec_depend>armor_py_api</exec_depend>
   <exec_depend>smach</exec_depend>
+  <exec_depend>move_base_msgs</exec_depend>
 
   <depend>opencv</depend>
   <depend>gmapping</depend>

@@ -194,8 +194,8 @@ class InterfaceHelper:
         # Define the callback associated with the speech, gesture, and battery low ROS subscribers.
         rospy.Subscriber('state/battery_low', Bool, self._battery_callback)
         # Define the clients for the the plan and control action servers.
-        self.planner_client = ActionClientHelper('motion/planner', PlanAction, mutex=self.mutex)
-        self.controller_client = ActionClientHelper('motion/controller', ControlAction, mutex=self.mutex)
+        #self.planner_client = ActionClientHelper('motion/planner', PlanAction, mutex=self.mutex)
+        #self.controller_client = ActionClientHelper('motion/controller', ControlAction, mutex=self.mutex)
 
     def reset_states(self):
         """
