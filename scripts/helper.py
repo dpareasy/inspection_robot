@@ -234,21 +234,21 @@ class InterfaceHelper:
         """
         return self._battery_low
 
-    # Update the current robot pose stored in the `robot-state` node.
-    @staticmethod
-    def init_robot_pose(point):
-        """
-        Function that initialise the robot position. It calls the server for initialising the robot position inside the environment.
+    # # Update the current robot pose stored in the `robot-state` node.
+    # @staticmethod
+    # def init_robot_pose(point):
+    #     """
+    #     Function that initialise the robot position. It calls the server for initialising the robot position inside the environment.
 
-        Args:
-            point(Point): robot initial position.
-        """
-        # Eventually, wait for the server to be initialised.
-        rospy.wait_for_service('state/set_pose')
-        try:
-            # Call the service and set the current robot position.
-            service = rospy.ServiceProxy('state/set_pose', SetPose)
-            service(point)  # None that the service `response` is not used.
-            print("Setting initial robot position")
-        except rospy.ServiceException as e:
-            print("Cannot set current robot position")
+    #     Args:
+    #         point(Point): robot initial position.
+    #     """
+    #     # Eventually, wait for the server to be initialised.
+    #     rospy.wait_for_service('state/set_pose')
+    #     try:
+    #         # Call the service and set the current robot position.
+    #         service = rospy.ServiceProxy('state/set_pose', SetPose)
+    #         service(point)  # None that the service `response` is not used.
+    #         print("Setting initial robot position")
+    #     except rospy.ServiceException as e:
+    #         print("Cannot set current robot position")

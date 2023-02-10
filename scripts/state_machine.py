@@ -81,9 +81,6 @@ class LoadOntology(smach.State):
         self.y_coord = room_info.y
         self.rooms[self.room] = (self.x_coord, self.y_coord)
         print('Feedback received: ', self.room, self.x_coord, self.y_coord)
-    
-    #def markers_callback(self, msg):
-    #    self.markers = msg.markers
 
     def execute(self, userdata):
         """
@@ -105,8 +102,6 @@ class LoadOntology(smach.State):
         self.client.wait_for_result()
         self.result = self.client.get_result()
         print(self.result.rooms_info)
-        #print(self.result.individuals_list[2])
-        #print("Markers detected: ", self.markers)
         userdata.rooms = self.rooms
         print(userdata.rooms['E'])
 
@@ -144,33 +139,22 @@ class DecideTarget(smach.State):
             TRANS_DECIDED (str): transition to the STATE_MOVING.
 
         """
-        # Define a random point to be reached through some via-points to be planned.
-        #goal = PlanGoal()
-        """
-        PlanGoal: goal position
-        """
-        #goal.target = Point(x = random.uniform(0, self.environment_size[0]),
-        #                    y = random.uniform(0, self.environment_size[1]))
         current_pose, choice, list_of_corridors = self._behavior.decide_target()
         print(choice)
         
         userdata.current_pose = current_pose
         userdata.choice = choice
         userdata.list_of_corridors = list_of_corridors
-        # Invoke the planner action server.
-        #self._helper.planner_client.send_goal(goal)
+
         while not rospy.is_shutdown():
             # Acquire the mutex to assure data consistencies with the ROS subscription threads managed by `self._helper`.
             self._helper.mutex.acquire()
             try:
                 # If the battery is low, then cancel the control action server and take the `battery_low` transition.
                 if self._helper.is_battery_low():  # Higher priority
-                    #self._helper.planner_client.cancel_goals()
+
                     self._behavior.go_to_recharge(current_pose)
                     return TRANS_RECHARGING
-                # If the controller finishes its computation, then take the `went_random_pose` transition, which is related to the `repeat` transition.
-                #if self._helper.planner_client.is_done():
-                #    userdata.random_plan = self._helper.planner_client.get_results().via_points
                 else:
                     return TRANS_DECIDED
 
@@ -225,14 +209,13 @@ class MoveToTarget(smach.State):
 
         # take the dictionary as an input
         room_coordinates = userdata.rooms[choice]
-        #print(room_coordinates)
         
         robot_goal.target_pose.header.frame_id = "map"
         robot_goal.target_pose.header.stamp = rospy.Time.now()
         robot_goal.target_pose.pose.orientation.w = 1
         robot_goal.target_pose.pose.position.x = room_coordinates[0]
         robot_goal.target_pose.pose.position.y = room_coordinates[1]
-        print(robot_goal)
+
         self.move_base_client.send_goal(robot_goal)
         
         while not rospy.is_shutdown():
@@ -253,7 +236,6 @@ class MoveToTarget(smach.State):
                 # Release the mutex to unblock the `self._helper` subscription threads if they are waiting.
                 self._helper.mutex.release()
             # Wait for a reasonably small amount of time to allow `self._helper` processing stimulus (eventually).
-            #print("sto qui")
             rospy.sleep(LOOP_SLEEP_TIME)
 
 class Surveying(State):

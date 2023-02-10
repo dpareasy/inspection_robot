@@ -75,6 +75,7 @@ class ArmControllerServer():
         self.rooms_info = []
         self.individuals_list = []
         self.room_coord = RoomCoord()
+        # Feedback from the arm
         self.feedback = MoveArmFeedback()
         self.result = MoveArmResult()
         self.marker_id = None
@@ -108,7 +109,7 @@ class ArmControllerServer():
                 self.room_coord.room = room
                 self.room_coord.x = response.x
                 self.room_coord.y = response.y
-                # Send each information room as a feedback to the state machine
+                # Send room's information as a feedback to the state machine
                 self.feedback.locations.append(self.room_coord)
                 self.a_server.publish_feedback(self.feedback)
                 # update locatin list for the ontology
@@ -176,9 +177,7 @@ class ArmControllerServer():
                 success = False
                 break
 
-            #epsilon = random.uniform(0, 0.15)
             self.pub_position(float(positions[i][1]), float(positions[i][2]), float(positions[i][3]))
-            #self.pub_position(float(positions[i][1]) + epsilon, float(positions[i][2]) + epsilon , float(positions[i][3]) + epsilon)
             rospy.sleep(1)
 
             if i == 7:

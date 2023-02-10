@@ -4,12 +4,15 @@
 	<gazebo reference="base_link">
 		<material>Gazebo/Orange</material>
 	</gazebo>
+
 	<gazebo reference="link_left_wheel">
 		<material>Gazebo/Blue</material>
 	</gazebo>
+
 	<gazebo reference="link_right_wheel">
 		<material>Gazebo/Blue</material>
 	</gazebo>
+
 	<gazebo reference="arm_base_link">
 		<material>Gazebo/Red</material>
 	</gazebo>
@@ -17,9 +20,11 @@
 	<gazebo reference="arm_link_01">
 		<material>Gazebo/Red</material>
 	</gazebo>
+
 	<gazebo reference="arm_link_02">
 		<material>Gazebo/Red</material>
 	</gazebo>
+
 	<gazebo reference="arm_link_03">
 		<material>Gazebo/Red</material>
 	</gazebo>
@@ -75,17 +80,6 @@
 			</plugin>
 		</sensor>
 	</gazebo>
- 
-	<!-- Planar Move -->  
-  <!-- <gazebo>
-    <plugin name="object_controller" filename="libgazebo_ros_planar_move.so">
-      <commandTopic>cmd_vel</commandTopic>
-      <odometryTopic>odom</odometryTopic>
-      <odometryFrame>odom</odometryFrame>
-      <odometryRate>20.0</odometryRate>
-      <robotBaseFrame>base_link</robotBaseFrame>
-    </plugin>
-  </gazebo> -->
 
 <!-- Diff drive -->
   <gazebo>

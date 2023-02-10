@@ -20,8 +20,6 @@ import threading
 import rospy
 from std_msgs.msg import Bool
 from helper import InterfaceHelper
-from inspection_robot.msg import Point
-from inspection_robot.srv import GetPose, GetPoseResponse, SetPose, SetPoseResponse
 
 class RobotState:
     """
@@ -37,60 +35,9 @@ class RobotState:
         self._pose = None
         # Initialise battery level.
         self._battery_low = False
-        # Define services.
-        # rospy.Service('state/get_pose', GetPose, self.get_pose)
-        # rospy.Service('state/set_pose', SetPose, self.set_pose)
         # Start publisher on a separate thread.
         th = threading.Thread(target = self.is_battery_low_)
         th.start()
-
-    # def set_pose(self, request):
-    #     """
-    #     The `robot/set_pose` service implementation.
-    #     The `request` input parameter is the current robot pose to be set,
-    #     as given by the client. This server returns an empty `response`.
-
-    #     Args:
-    #         request(Point): current robot position to be set
-
-    #     Returns:
-    #         SetPoseResponse: an empty response
-
-    #     """
-    #     if request.pose is not None:
-    #         # Store the new current robot position.
-    #         self._pose = request.pose
-    #         print("Set current robot position")
-    #     else:
-    #         print("Cannot set an unspecified robot position")
-    #     # Return an empty response.
-    #     return SetPoseResponse()
-
-    # def get_pose(self, request):
-    #     """
-    #     The `robot/get_pose` service implementation.
-    #     The `request` input parameter is given by the client as empty. Thus, it is not used.
-    #     The `response` returned to the client contains the current robot pose.
-
-    #     Args:
-    #         request: empty response
-
-    #     Returns:
-    #         response(Point): the position of the robot
-
-    #     """
-    #     # Log information.
-    #     if self._pose is None:
-    #         print("Cannot get an unspecified robot position")
-    #     else:
-    #         print("Get current robot position")
-    #     # Create the response with the robot pose and return it.
-    #     response = GetPoseResponse()
-    #     """
-    #     GetPoseResponse(): robot position
-    #     """
-    #     response.pose = self._pose
-    #     return response
 
     def is_battery_low_(self):
         """
@@ -134,9 +81,5 @@ if __name__ == "__main__":
     """
     RobotState()
     helper = InterfaceHelper()
-    # Get the initial robot pose from ROS parameters.
-    #robot_pose_param = rospy.get_param('state/initial_pose', [0, 0])
-    # Initialise robot position in the `robot_state`, as required by the plan anc control action servers.
-    #helper.init_robot_pose(Point(x = robot_pose_param[0], y = robot_pose_param[1]))
     rospy.spin()
 

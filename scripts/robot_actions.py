@@ -11,8 +11,10 @@ ROS node that helps the robot in performing its actions.
 """
 # Import ROS libraries.
 import random
+import rospy
 import time
 import simple_colors
+from geometry_msgs.msg import Twist
 from armor_api.armor_client import ArmorClient
 
 client = ArmorClient("assignment", "my_ontology")
@@ -31,6 +33,7 @@ class BehaviorHelper:
         self.corridor = 'corridor'
         self.robot_position = 'robot_position'
         self.reachable_destinations = 'reachable_destinations'
+        self.rotate = rospy.Publisher('cmd_vel', Twist, queue_size=10)
 
     def inters_b2_lists(self, list1, list2):
         """
@@ -195,3 +198,21 @@ class BehaviorHelper:
         """
         client.manipulation.replace_objectprop_b2_ind('isIn', self.agent, self.charging_location, current_location)
         client.utils.sync_buffered_reasoner()
+
+    def survey_room(self):
+         # Define the duration for a full rotation
+        rotation_time = 4.0
+
+        # Define the angular velocity for a full rotation
+        angular_velocity = 2 * 3.14 / rotation_time
+
+        twist = Twist()
+        twist.angular.z = angular_velocity
+
+        # Start rotating
+        self.rotate.publish(twist)
+        time.sleep(rotation_time)
+
+        # Stop rotating
+        twist.angular.z = 0.0
+        self.rotate.publish(twist)
