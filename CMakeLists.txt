@@ -90,6 +90,7 @@ add_service_files(
    MoveArm.action
    Plan.action
    Control.action
+   Survey.action
 )
 
 ## Generate added messages and services with any dependencies listed here
@@ -186,6 +187,7 @@ add_dependencies(marker_detector ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EX
 ## in contrast to setup.py, you can choose the destination
  catkin_install_python(PROGRAMS
    scripts/arm_controller.py
+   scripts/survey_controller.py
    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
  )
 

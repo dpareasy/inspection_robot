@@ -14,5 +14,7 @@
    <node pkg = "inspection_robot" type = "arm_controller.py" name = "arm_controller" output = "screen" launch-prefix="xterm -e"> </node>
    <node pkg = "inspection_robot" type = "robot_state.py" name = "robot_state" output = "screen" launch-prefix="xterm -e"> </node>
    <node pkg="inspection_robot" type="marker_detector" name="marker_detector"  output = "screen" launch-prefix="xterm -e"> </node>
+   <node pkg="inspection_robot" type="survey_controller.py" name="survey_controller"  output = "screen" launch-prefix="xterm -e"> </node>
+
    <!--node pkg = "arch_skeleton" type = "controller.py" name = "controller" output = "screen" launch-prefix="xterm -e"> </node-->
 </launch>

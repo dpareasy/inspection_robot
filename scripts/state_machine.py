@@ -19,7 +19,7 @@ import smach_ros
 import time
 import actionlib
 import actionlib.msg
-from inspection_robot.msg import MoveArmGoal, MoveArmAction, MoveArmActionResult
+from inspection_robot.msg import MoveArmGoal, MoveArmAction, MoveArmActionResult, SurveyGoal
 from smach import State
 from helper import InterfaceHelper
 from robot_actions import BehaviorHelper
@@ -169,8 +169,6 @@ class MoveToTarget(smach.State):
         # Get a reference to the interfaces with the other nodes of the architecture.
         self._helper = interface_helper
         self._behavior = behavior_helper
-        #self.move_base_client = actionlib.SimpleActionClient('/move_base',MoveBaseAction)
-        
 
         smach.State.__init__(self, outcomes = [TRANS_RECHARGING, TRANS_MOVED], input_keys = ['rooms','current_pose', 'choice', 'list_of_corridors'], output_keys = ['current_pose'])
 
@@ -214,8 +212,6 @@ class MoveToTarget(smach.State):
                 # If the battery is low, then cancel the control action server and take the `battery_low` transition.
                 if self._helper.is_battery_low():  # Higher priority
                     self._helper.move_base_client.cancel_goals()
-                    #self._helper.move_base_client.send_goal(charging_point)
-                    #self._behavior.go_to_recharge(current_pose)
                     return TRANS_RECHARGING
                 # If the controller finishes its computation, then take the `went_random_pose` transition, which is related to the `repeat` transition.
                 if self._helper.move_base_client.is_done():
@@ -259,25 +255,23 @@ class Surveying(State):
             TRANS_SURVEYED(str): transition to STATE_DECISION.
 
         """
-        current_pose = userdata.current_pose
-        timer = 0
-        while (not rospy.is_shutdown()):  # Wait for stimulus from the other nodes of the architecture.
-            
-            while(timer != 500) and (not self._helper.is_battery_low()):
-                self._helper.mutex.acquire()
-                # Acquire the mutex to assure data consistencies with the ROS subscription threads managed by `self._helper`.
-                timer = timer + 1
-                time.sleep(0.01)
-                try:
-                    if self._helper.is_battery_low():  # Higher priority
-                        self._behavior.go_to_recharge(current_pose)
-                        return TRANS_RECHARGING
-                    
-                    if timer == 500:
-                        return TRANS_SURVEYED
-                finally:
-                    # Release the mutex to unblock the `self._helper` subscription threads if they are waiting.
-                    self._helper.mutex.release()
+        goal = SurveyGoal()
+        goal.survey = True
+        self._helper.surveyor_client.send_request(goal)
+        
+        while not rospy.is_shutdown():  # Wait for stimulus from the other nodes of the architecture.            
+            self._helper.mutex.acquire()
+            # Acquire the mutex to assure data consistencies with the ROS subscription threads managed by `self._helper`.
+            try:
+                if self._helper.is_battery_low():  # Higher priority
+                    self._helper.surveyor_client.cancel_goals()
+                    return TRANS_RECHARGING
+                
+                if self._helper.surveyor_client.is_done():
+                    return TRANS_SURVEYED
+            finally:
+                # Release the mutex to unblock the `self._helper` subscription threads if they are waiting.
+                self._helper.mutex.release()
             # Wait for a reasonably small amount of time to allow `self._helper` processing stimulus (eventually).
             rospy.sleep(LOOP_SLEEP_TIME)
 

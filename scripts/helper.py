@@ -20,7 +20,6 @@ Service:
 # Import ROS libraries.
 import rospy
 from actionlib import SimpleActionClient
-
 # Import mutex to manage synchronization among ROS-based threads (i.e., node loop and subscribers)
 from threading import Lock
 from armor_api.armor_client import ArmorClient
@@ -28,8 +27,7 @@ from armor_api.armor_client import ArmorClient
 # Import ROS-based messages.
 from std_msgs.msg import Bool
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
-
-from inspection_robot.srv import SetPose
+from inspection_robot.msg import SurveyAction
 
 client = ArmorClient("assignment", "my_ontology")
 
@@ -58,7 +56,7 @@ class ActionClientHelper:
 
     def send_goal(self, goal):
         """
-        Start the action server with a new `goal`. Note this call is not blocking (i.e., asynchronous performed).
+        Start move_base action server with a new target position. Note this call is not blocking (i.e., asynchronous performed).
 
         Args:
             goal(Point): Goal point.
@@ -88,6 +86,18 @@ class ActionClientHelper:
             self._results = None
         else:
             print("Warning send a new goal, cancel the current request first!")
+
+    def send_request(self, request):
+        if not self._is_running:
+            self._client.send_goal(request,
+                                    done_cb = self._done_callback,
+                                    feedback_cb = self._feedback_callback)
+            self._is_running = True
+            self._is_done = False
+            self._results = None
+        else:
+            print("Warning send a new goal, cancel the current request first!")
+
 
     def cancel_goals(self):
         """
@@ -207,6 +217,7 @@ class InterfaceHelper:
         rospy.Subscriber('state/battery_low', Bool, self._battery_callback)
         # Define the clients for the the plan and control action servers.
         self.move_base_client = ActionClientHelper('move_base', MoveBaseAction, mutex=self.mutex)
+        self.surveyor_client = ActionClientHelper('surveyor', SurveyAction, mutex=self.mutex)
 
     def reset_states(self):
         """

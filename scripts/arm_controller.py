@@ -169,6 +169,7 @@ class ArmControllerServer():
 
         if goal is None:
             print('no goal has been received')
+            self.a_server.set_aborted()
             return
 
         i = 0
