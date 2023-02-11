@@ -15,21 +15,14 @@ Service:
 
 import smach
 import rospy
-import random
-import os
-
 import smach_ros
 import time
 import actionlib
 import actionlib.msg
-from inspection_robot.msg import MoveArmGoal, MoveArmAction, MoveArmActionFeedback, MoveArmActionResult
-#from threading import Lock
-#from std_msgs.msg import Bool
-from smach import State #StateMachine, State
-from helper import InterfaceHelper, ActionClientHelper
+from inspection_robot.msg import MoveArmGoal, MoveArmAction, MoveArmActionResult
+from smach import State
+from helper import InterfaceHelper
 from robot_actions import BehaviorHelper
-from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
-from inspection_robot.msg import MarkerList, Point, ControlGoal, PlanGoal
 from inspection_robot.msg import RechStatus
 from armor_api.armor_client import ArmorClient
 
@@ -211,7 +204,6 @@ class MoveToTarget(smach.State):
         # take the dictionary as an input
         room_coordinates = userdata.rooms[choice]
         charging_point = userdata.rooms['E']
-        print(charging_point)
         
         self._helper.move_base_client.send_goal(room_coordinates)
         print('Coordinates sent')
@@ -331,7 +323,6 @@ class Recharging(State):
                     msg = RechStatus()
                     msg.rech_status = True
                     pub.publish(msg)
-                    print("status: ", msg)
                 if not self._helper.is_battery_low():
                     self._helper.reset_states()  # Reset the state variable related to the stimulus.
                     self._behavior.go_to_recharge(current_pose)
@@ -350,7 +341,6 @@ def main():
     # Initialise an classes to manage the interfaces with the other nodes in the architecture.
     #ontology = CreateMap()
     helper = InterfaceHelper()
-    #action_helper = ActionClientHelper()
     behavior = BehaviorHelper()
     sm_main = smach.StateMachine([])
     

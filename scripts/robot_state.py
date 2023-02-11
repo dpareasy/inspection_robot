@@ -15,7 +15,6 @@ Service:
 
     /state/set_pose: set the robot current pose
 """
-import os
 import threading
 import rospy
 from std_msgs.msg import Bool
@@ -79,11 +78,10 @@ class RobotState:
                 print("Robot got low battery after" , delay , "seconds")
                 while ok_battery is False:
                     pass
-                print('ciao')
                 delay = 10
             else:
                 print("Robot got fully charged battery after" , delay , "seconds")
-                delay = 30
+                delay = 180
             # Wait for simulate battery usage.
             rospy.sleep(delay)
             # Change battery state.

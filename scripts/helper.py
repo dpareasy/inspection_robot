@@ -206,8 +206,6 @@ class InterfaceHelper:
         # Define the callback associated with the speech, gesture, and battery low ROS subscribers.
         rospy.Subscriber('state/battery_low', Bool, self._battery_callback)
         # Define the clients for the the plan and control action servers.
-        #self.planner_client = ActionClientHelper('motion/planner', PlanAction, mutex=self.mutex)
-        #self.controller_client = ActionClientHelper('motion/controller', ControlAction, mutex=self.mutex)
         self.move_base_client = ActionClientHelper('move_base', MoveBaseAction, mutex=self.mutex)
 
     def reset_states(self):
@@ -246,22 +244,3 @@ class InterfaceHelper:
 
         """
         return self._battery_low
-
-    # # Update the current robot pose stored in the `robot-state` node.
-    # @staticmethod
-    # def init_robot_pose(point):
-    #     """
-    #     Function that initialise the robot position. It calls the server for initialising the robot position inside the environment.
-
-    #     Args:
-    #         point(Point): robot initial position.
-    #     """
-    #     # Eventually, wait for the server to be initialised.
-    #     rospy.wait_for_service('state/set_pose')
-    #     try:
-    #         # Call the service and set the current robot position.
-    #         service = rospy.ServiceProxy('state/set_pose', SetPose)
-    #         service(point)  # None that the service `response` is not used.
-    #         print("Setting initial robot position")
-    #     except rospy.ServiceException as e:
-    #         print("Cannot set current robot position")
