@@ -73,6 +73,7 @@ add_message_files(
    RoomConnection.msg
    RoomCoord.msg
    Point.msg
+   RechStatus.msg
  )
 
 ## Generate services in the 'srv' folder

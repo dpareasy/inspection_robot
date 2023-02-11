@@ -27,7 +27,8 @@ from armor_api.armor_client import ArmorClient
 
 # Import ROS-based messages.
 from std_msgs.msg import Bool
-from inspection_robot.msg import PlanAction, ControlAction
+from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
+
 from inspection_robot.srv import SetPose
 
 client = ArmorClient("assignment", "my_ontology")
@@ -67,7 +68,18 @@ class ActionClientHelper:
         # within the ROS architecture no more than one client can use the same server at the same time.
         if not self._is_running:
             # Start the action server.
-            self._client.send_goal(goal,
+            robot_goal = MoveBaseGoal()
+
+            x_coord = goal[0]
+            y_coord = goal[1]
+
+            robot_goal.target_pose.header.frame_id = "map"
+            robot_goal.target_pose.header.stamp = rospy.Time.now()
+            robot_goal.target_pose.pose.orientation.w = 1
+            robot_goal.target_pose.pose.position.x = x_coord
+            robot_goal.target_pose.pose.position.y = y_coord
+
+            self._client.send_goal(robot_goal,
                                    done_cb = self._done_callback,
                                    feedback_cb = self._feedback_callback)
             # Set the client's states.
@@ -196,6 +208,7 @@ class InterfaceHelper:
         # Define the clients for the the plan and control action servers.
         #self.planner_client = ActionClientHelper('motion/planner', PlanAction, mutex=self.mutex)
         #self.controller_client = ActionClientHelper('motion/controller', ControlAction, mutex=self.mutex)
+        self.move_base_client = ActionClientHelper('move_base', MoveBaseAction, mutex=self.mutex)
 
     def reset_states(self):
         """

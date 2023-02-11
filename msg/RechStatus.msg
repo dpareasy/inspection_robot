@@ -1,0 +1,1 @@
+bool rech_status

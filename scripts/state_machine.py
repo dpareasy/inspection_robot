@@ -16,6 +16,8 @@ Service:
 import smach
 import rospy
 import random
+import os
+
 import smach_ros
 import time
 import actionlib
@@ -28,6 +30,7 @@ from helper import InterfaceHelper, ActionClientHelper
 from robot_actions import BehaviorHelper
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
 from inspection_robot.msg import MarkerList, Point, ControlGoal, PlanGoal
+from inspection_robot.msg import RechStatus
 from armor_api.armor_client import ArmorClient
 
 client = ArmorClient("assignment", "my_ontology") 
@@ -173,7 +176,7 @@ class MoveToTarget(smach.State):
         # Get a reference to the interfaces with the other nodes of the architecture.
         self._helper = interface_helper
         self._behavior = behavior_helper
-        self.move_base_client = actionlib.SimpleActionClient('/move_base',MoveBaseAction)
+        #self.move_base_client = actionlib.SimpleActionClient('/move_base',MoveBaseAction)
         
 
         smach.State.__init__(self, outcomes = [TRANS_RECHARGING, TRANS_MOVED], input_keys = ['rooms','current_pose', 'choice', 'list_of_corridors'], output_keys = ['current_pose'])
@@ -201,34 +204,29 @@ class MoveToTarget(smach.State):
         ControlGoal: via points to reach the goal 
         """
 
-        robot_goal = MoveBaseGoal()
-
         current_pose = userdata.current_pose
         choice = userdata.choice
         list_of_corridors = userdata.list_of_corridors
 
         # take the dictionary as an input
         room_coordinates = userdata.rooms[choice]
+        charging_point = userdata.rooms['E']
+        print(charging_point)
         
-        robot_goal.target_pose.header.frame_id = "map"
-        robot_goal.target_pose.header.stamp = rospy.Time.now()
-        robot_goal.target_pose.pose.orientation.w = 1
-        robot_goal.target_pose.pose.position.x = room_coordinates[0]
-        robot_goal.target_pose.pose.position.y = room_coordinates[1]
-
-        self.move_base_client.send_goal(robot_goal)
-        
+        self._helper.move_base_client.send_goal(room_coordinates)
+        print('Coordinates sent')
         while not rospy.is_shutdown():
             # Acquire the mutex to assure data consistencies with the ROS subscription threads managed by `self._helper`.
             self._helper.mutex.acquire()
             try:
                 # If the battery is low, then cancel the control action server and take the `battery_low` transition.
                 if self._helper.is_battery_low():  # Higher priority
-                    self.move_base_client.cancel_goal()
-                    self._behavior.go_to_recharge(current_pose)
+                    self._helper.move_base_client.cancel_goals()
+                    #self._helper.move_base_client.send_goal(charging_point)
+                    #self._behavior.go_to_recharge(current_pose)
                     return TRANS_RECHARGING
                 # If the controller finishes its computation, then take the `went_random_pose` transition, which is related to the `repeat` transition.
-                if self.move_base_client.get_state() == actionlib.GoalStatus.SUCCEEDED:
+                if self._helper.move_base_client.is_done():
                     self._behavior.move_to_target(choice, current_pose, list_of_corridors)
                     userdata.current_pose = choice
                     return TRANS_MOVED
@@ -301,7 +299,7 @@ class Recharging(State):
         self._helper = interface_helper
         self._behavior = behavior_helper
         # Initialise this state with possible transitions (i.e., valid outputs of the `execute` function).
-        smach.State.__init__(self, outcomes = [TRANS_RECHARGED])
+        smach.State.__init__(self, outcomes = [TRANS_RECHARGED], input_keys=['rooms', 'current_pose'])
 
     # Define the function performed each time a transition is such to enter in this state.
     # Note that the input parameter `userdata` is not used since no data is required from the other states.
@@ -320,13 +318,23 @@ class Recharging(State):
             TRANS_RECHARGED(str): transition to STATE_DECISION
 
         """
+        current_pose = userdata.current_pose
+        charging_point = userdata.rooms['E']
+        self._helper.move_base_client.send_goal(charging_point)
+        pub = rospy.Publisher('recharging_status', RechStatus, queue_size=10)
         while not rospy.is_shutdown():  # Wait for stimulus from the other nodes of the architecture.
             # Acquire the mutex to assure data consistencies with the ROS subscription threads managed by `self._helper`.
             self._helper.mutex.acquire()
             try:
                 # If the battery is no low anymore take the `charged` transition.
+                if self._helper.move_base_client.is_done():
+                    msg = RechStatus()
+                    msg.rech_status = True
+                    pub.publish(msg)
+                    print("status: ", msg)
                 if not self._helper.is_battery_low():
                     self._helper.reset_states()  # Reset the state variable related to the stimulus.
+                    self._behavior.go_to_recharge(current_pose)
                     return TRANS_RECHARGED
             finally:
                 # Release the mutex to unblock the `self._helper` subscription threads if they are waiting.
@@ -351,7 +359,7 @@ def main():
         smach.StateMachine.add(STATE_INIT, LoadOntology(),
                          transitions = {TRANS_INITIALIZED: STATE_NORMAL})
         
-        sm_normal = smach.StateMachine(outcomes=[TRANS_BATTERY_LOW], input_keys = ['rooms'])
+        sm_normal = smach.StateMachine(outcomes=[TRANS_BATTERY_LOW], input_keys = ['rooms'], output_keys = ['current_pose'])
 
         with sm_normal:
             smach.StateMachine.add(STATE_DECISION, DecideTarget(helper, behavior),

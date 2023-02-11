@@ -15,11 +15,15 @@ Service:
 
     /state/set_pose: set the robot current pose
 """
-
+import os
 import threading
 import rospy
 from std_msgs.msg import Bool
+from inspection_robot.msg import RechStatus
 from helper import InterfaceHelper
+
+global ok_battery
+ok_battery = False
 
 class RobotState:
     """
@@ -36,6 +40,7 @@ class RobotState:
         # Initialise battery level.
         self._battery_low = False
         # Start publisher on a separate thread.
+        rospy.Subscriber('recharging_status', RechStatus, self.callback)
         th = threading.Thread(target = self.is_battery_low_)
         th.start()
 
@@ -48,6 +53,11 @@ class RobotState:
         # Publish battery level changes randomly.
         self.random_battery_notifier_(publisher)
 
+    def callback(self, data):
+        #print(data.rech_status)
+        global ok_battery
+        ok_battery = data.rech_status
+
     def random_battery_notifier_(self, publisher):
         """
         Publish when the battery change state (i.e., high/low) based on a random
@@ -59,17 +69,21 @@ class RobotState:
             publisher(publisher): publisher for the battery status.
 
         """
-        delay = 0  # Initialised to 0 just for logging purposes.
+
+        delay = 0 # Initialised to 0 just for logging purposes.
         while not rospy.is_shutdown():
             # Publish battery level.
             publisher.publish(Bool(self._battery_low))
             # Log state.
             if self._battery_low:
                 print("Robot got low battery after" , delay , "seconds")
+                while ok_battery is False:
+                    pass
+                print('ciao')
                 delay = 10
             else:
                 print("Robot got fully charged battery after" , delay , "seconds")
-                delay = 1800
+                delay = 30
             # Wait for simulate battery usage.
             rospy.sleep(delay)
             # Change battery state.
@@ -80,6 +94,7 @@ if __name__ == "__main__":
     Initialize the robot position in [0,0]. init_robot_pose() function will make the request to the controller server
     """
     RobotState()
+    
     helper = InterfaceHelper()
     rospy.spin()
 
