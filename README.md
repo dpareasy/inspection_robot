@@ -8,6 +8,9 @@ Contacts:
 
 
 ## Introduction ##
-This repository contains a ROS-based software, developed in python language, that implements the behavior of a surveillance robot. It represents an improvement of a previous work in which the simulation was handled with two scripts simulating the path of the robot through different random viapoints.
-Here instead, the simulation is done with gazebo, and rviz is used as 3D visualizer.
-For a detailed description of the architecture of the project visit the [first version](https://github.com/dpareasy/Assignment1) of the project.
+This repository houses a software that implements the behavior of a surveillance robot using ROS (Robot Operating System). The code is written in Python and is an improvement over a previous iteration where the simulation was handled through two separate scripts that randomly generated the robot's path through various waypoints. In this updated version, the simulation is carried out using Gazebo and 3D visualization is provided by RViz.
+For a comprehensive understanding of the project's architecture, please refer to the [initial version](https://github.com/dpareasy/Assignment1) of the project.
+
+Hereafter only the changes with respect to the old version will be pointed out.
+
+
