@@ -149,14 +149,13 @@ class BehaviorHelper:
             for i in range (len(reachable_urgent)):
                 choice_last_visit = client.query.dataprop_b2_ind('visitedAt', reachable_urgent[i])
                 choice_last_visit = self.clean_strings(2, choice_last_visit)
-                print(reachable_urgent[i], ": ", choice_last_visit)
                 if choice_last_visit <= oldest:
                     target = reachable_urgent[i]
         print(simple_colors.green("TARGET " + target + " ACQUIRED\n\n"))
-        return current_pose, target, list_of_corridors
+        return current_pose, target #, list_of_corridors
 
 
-    def move_to_target(self, chosen_target, current_pose, list_of_corridors):
+    def move_to_target(self, chosen_target, current_pose):
         """
         Moving to the target room.
 
@@ -174,12 +173,7 @@ class BehaviorHelper:
         last_change = client.query.dataprop_b2_ind('now', self.agent)
         last_change = self.clean_strings(2, last_change)
         current_time = str(int(time.time()))
-        print(list_of_corridors)
-        print(chosen_target)
-
         client.manipulation.replace_dataprop_b2_ind('visitedAt', chosen_target, 'Long', current_time, last_visit)
-        print(chosen_target, "last visit", last_visit, "current time ", current_time)
-
         client.manipulation.replace_dataprop_b2_ind('now', self.agent, 'Long', current_time, last_change)
         client.utils.sync_buffered_reasoner()
         print(simple_colors.magenta("\n\nRobot in " + chosen_target + "\n\n"))

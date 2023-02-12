@@ -72,7 +72,6 @@ add_message_files(
    MarkerList.msg
    RoomConnection.msg
    RoomCoord.msg
-   Point.msg
    RechStatus.msg
  )
 
@@ -80,16 +79,12 @@ add_message_files(
 add_service_files(
    FILES
    RoomInformation.srv
-   SetPose.srv
-   GetPose.srv
  )
 
 ## Generate actions in the 'action' folder
  add_action_files(
    FILES
    MoveArm.action
-   Plan.action
-   Control.action
    Survey.action
 )
 
@@ -130,7 +125,7 @@ generate_messages(
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package( 
-#  INCLUDE_DIRS include
+# INCLUDE_DIRS include
   #LIBRARIES aruco_ros_utils
   #CATKIN_DEPENDS roscpp aruco message_generation message_runtime rospy std_msgs
   #DEPENDS OpenCV

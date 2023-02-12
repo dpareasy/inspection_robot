@@ -58,14 +58,18 @@ class SurveyRoom(object):
             return
         
         # Publish a twist message to rotate the base link
+        pub = rospy.Publisher("cmd_vel", Twist, queue_size=10)
+
         twist = Twist()
         """
         Twist(): robot velocity
         """
-        twist.angular.z = 2.0
-        pub = rospy.Publisher("cmd_vel", Twist, queue_size=10)
+        # 360 deg rotation
+        twist.angular.z = 2.0 # rad/s
+        turn_time = 6.28 # sec
+        start_time = rospy.Time.now()
 
-        for i in range(200):
+        while (rospy.Time.now() - start_time).to_sec() < turn_time:
             pub.publish(twist)
 
             # Check if the action has been cancelled by the client
@@ -74,6 +78,9 @@ class SurveyRoom(object):
                 return
 
         result = SurveyResult()
+        """
+        Survey Result(): final scanning result
+        """
         result.result = 'SCANNED AREA'
         print(result.result)
         self._as.set_succeeded(result)

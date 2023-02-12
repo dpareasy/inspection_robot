@@ -25,6 +25,7 @@ import random
 import time
 from numpy import *
 from std_msgs.msg import Float64
+from geometry_msgs.msg import Twist
 import actionlib
 from inspection_robot.msg import MoveArmAction, MoveArmFeedback, MoveArmResult, MarkerList, RoomConnection, RoomCoord
 from armor_api.armor_client import ArmorClient
@@ -38,6 +39,7 @@ link3 = Float64()
 pub1 = rospy.Publisher('/insprob/joint1_position_controller/command', Float64, queue_size = 10)
 pub2 = rospy.Publisher('/insprob/joint2_position_controller/command', Float64, queue_size = 10)
 pub3 = rospy.Publisher('/insprob/joint3_position_controller/command', Float64, queue_size = 10)
+pubVel = rospy.Publisher('/cmd_vel', Twist, queue_size = 10)
 
 global marker_id
 
@@ -55,7 +57,7 @@ class ArmControllerServer():
     ##################
     ### Armor setup ##
     ##################
-    #------------------------------------------------------------------------------------------------------------#
+    #=============================================================================================================
         self.armor_client = ArmorClient("assignment", "my_ontology")
         self.path = dirname(realpath(__file__))
         # Put the path of the file.owl
@@ -83,9 +85,18 @@ class ArmControllerServer():
         self.rooms_info = []
         self.individuals_list = []
         self.room_coord = RoomCoord()
+        """
+        RoomCoord(): cordinates of the rooms
+        """
         # Feedback from the arm
         self.feedback = MoveArmFeedback()
+        """
+        MoveArmFeedback(): feedback from the arm controller server
+        """
         self.result = MoveArmResult()
+        """
+        MoveArmResult(): result from the arm controller server
+        """
         self.marker_id = None
 
     ######################
@@ -173,7 +184,7 @@ class ArmControllerServer():
     ###############
     ### Move Arm ##
     ###############
-    #------------------------------------------------------------------------------------------------------------#
+    #=============================================================================================================
     def execute_cb(self, goal):
         print(goal)
         positions = array([['pose0',0.0,0.0,0.0],
@@ -184,6 +195,8 @@ class ArmControllerServer():
                            ['pose5',2.8,0.0,0.4],
                            ['pose6',-1.2,0,0.3],
                            ['pose7',-1.2,0,-0.5]])
+        
+        rate = rospy.Rate(10)
         success = True
         self.result.rooms_info = self.rooms_info
 
@@ -206,8 +219,19 @@ class ArmControllerServer():
             else:
                 i = i + 1
         
-        #put the arm in initial configuration
-        self.pub_position(0.0, 0.0, 0.0)
+        # put the arm in initial configuration
+        self.pub_position(float(positions[0][1]), float(positions[0][2]), float(positions[0][3]))
+
+        # rotate the robot of 90 degrees 
+        twist = Twist()
+        """
+        Twist(): robot velocity
+        """
+        twist.angular.z = 2.0 # rad/sec
+        turn_time = 3.14 # sec
+        start_time = rospy.Time.now()
+        while (rospy.Time.now() - start_time).to_sec() < turn_time:
+            pubVel.publish(twist)
 
         if success:
             self.armor_client.manipulation.disjoint_all_ind(self.individuals_list)

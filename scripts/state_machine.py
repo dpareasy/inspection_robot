@@ -115,7 +115,7 @@ class DecideTarget(smach.State):
         self._behavior = behavior_helper
         # Get the environment size from ROS parameters.
         self.environment_size = rospy.get_param('config/environment_size')
-        smach.State.__init__(self, outcomes = [TRANS_RECHARGING, TRANS_DECIDED], input_keys = ['rooms'], output_keys = ['current_pose', 'choice', 'list_of_corridors'])
+        smach.State.__init__(self, outcomes = [TRANS_RECHARGING, TRANS_DECIDED], input_keys = ['rooms'], output_keys = ['current_pose', 'choice'])
 
     def execute(self, userdata):
         """
@@ -135,12 +135,13 @@ class DecideTarget(smach.State):
             TRANS_DECIDED (str): transition to the STATE_MOVING.
 
         """
-        current_pose, choice, list_of_corridors = self._behavior.decide_target()
+        # current_pose, choice, list_of_corridors = self._behavior.decide_target()
+        current_pose, choice = self._behavior.decide_target()
         print(choice)
         
         userdata.current_pose = current_pose
         userdata.choice = choice
-        userdata.list_of_corridors = list_of_corridors
+        # userdata.list_of_corridors = list_of_corridors
 
         while not rospy.is_shutdown():
             # Acquire the mutex to assure data consistencies with the ROS subscription threads managed by `self._helper`.
@@ -168,7 +169,7 @@ class MoveToTarget(smach.State):
         self._helper = interface_helper
         self._behavior = behavior_helper
 
-        smach.State.__init__(self, outcomes = [TRANS_RECHARGING, TRANS_MOVED], input_keys = ['rooms','current_pose', 'choice', 'list_of_corridors'], output_keys = ['current_pose'])
+        smach.State.__init__(self, outcomes = [TRANS_RECHARGING, TRANS_MOVED], input_keys = ['rooms','current_pose', 'choice'], output_keys = ['current_pose'])
 
     def execute(self, userdata):
         """
@@ -194,7 +195,7 @@ class MoveToTarget(smach.State):
 
         current_pose = userdata.current_pose
         choice = userdata.choice
-        list_of_corridors = userdata.list_of_corridors
+        #list_of_corridors = userdata.list_of_corridors
 
         # take the dictionary as an input
         room_coordinates = userdata.rooms[choice]
@@ -211,7 +212,7 @@ class MoveToTarget(smach.State):
                     return TRANS_RECHARGING
                 # If the controller finishes its computation, then take the `went_random_pose` transition, which is related to the `repeat` transition.
                 if self._helper.move_base_client.is_done():
-                    self._behavior.move_to_target(choice, current_pose, list_of_corridors)
+                    self._behavior.move_to_target(choice, current_pose)
                     userdata.current_pose = choice
                     return TRANS_MOVED
             finally:
@@ -250,7 +251,11 @@ class Surveying(State):
             TRANS_SURVEYED(str): transition to STATE_DECISION.
 
         """
+
         goal = SurveyGoal()
+        """
+        SurveyGoal(): start survey
+        """
         goal.survey = True
         self._helper.surveyor_client.send_request(goal)
 

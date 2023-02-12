@@ -7,7 +7,7 @@
 
 .. moduleauthor:: Luca Buoncompagni, Davide Leo Parisi <davide.parisi1084@gmail.com>
 
-ROS node for defining the behavior of the state machine
+ROS node for creating the action clients 
 
 Subscribes to:
     /state/battery_low: where the robot_state publishes the battery status.
@@ -70,8 +70,12 @@ class ActionClientHelper:
         # A new goal can be given to the action server only if it is not running. This simplification implies that
         # within the ROS architecture no more than one client can use the same server at the same time.
         if not self._is_running:
+            
             # Start the action server.
             robot_goal = MoveBaseGoal()
+            """
+            MoveBaseGoal(): goal coordinates
+            """
 
             x_coord = goal[0]
             y_coord = goal[1]
