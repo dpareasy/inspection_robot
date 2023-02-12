@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-.. module:: my_state_machine
+.. module:: arm_controller
    :platform: Unix
    :synopsis: Python module for Moving the arm and create the ontology
 
@@ -43,15 +43,19 @@ global marker_id
 
 class ArmControllerServer():
     """
-    This class is used to move the arm, receive the marker_id detected from the camera nd to create the ontolgy.
+    This class is used to move the arm, and create the ontolgy.
     """
     def __init__(self):
         # Define the  action server
-        self.a_server = actionlib.SimpleActionServer("move_arm_as", MoveArmAction, execute_cb = self.execute_cb, auto_start = False)
-        
-                                    ######################
-                                    ## Set up for Armor ##
-        ###########################################################################
+        self.a_server = actionlib.SimpleActionServer("move_arm_as",
+                                                    MoveArmAction,
+                                                    execute_cb = self.execute_cb,
+                                                    auto_start = False)
+
+    ##################
+    ### Armor setup ##
+    ##################
+    #------------------------------------------------------------------------------------------------------------#
         self.armor_client = ArmorClient("assignment", "my_ontology")
         self.path = dirname(realpath(__file__))
         # Put the path of the file.owl
@@ -61,9 +65,13 @@ class ArmControllerServer():
         self.armor_client.utils.mount_on_ref()
         self.armor_client.utils.set_log_to_terminal(True)
         # Define the subscriber to the topic in which the marker's id are published
-        rospy.Subscriber("marker_detector/MarkerList", MarkerList, self.marker_cb)
+        rospy.Subscriber("marker_detector/MarkerList",
+                        MarkerList,
+                        self.marker_cb)
+
         # Client connecting to marker_server to obtain environment's informations
-        self.send_id = rospy.ServiceProxy('/room_info', RoomInformation)
+        self.send_id = rospy.ServiceProxy('/room_info',
+                                         RoomInformation)
         #Start the server
         self.a_server.start()
 
@@ -80,31 +88,31 @@ class ArmControllerServer():
         self.result = MoveArmResult()
         self.marker_id = None
 
-                                #####################
-                                ## Create Ontology ##
-    ###############################################################################
+    ######################
+    ### Create Ontology ##
+    ######################
+    #=============================================================================================================
     def marker_cb(self, msg):
         """
-            This callback takes the informations aboud the id of the aruco markers. Then it makes the request to the marker server to get informations about the rooms.
+            This callback takes the informations about markers' id. Then it makes the request to the marker server to get informations about the rooms.
             Then it creates the ontology.
+
+            The feedback sent to the state machine contains the rooms' name and their coordinates. 
         """
 
         self.marker_id = msg.markers
-        print(self.marker_id)
-        
         # Making request to server
         rospy.wait_for_service('/room_info')
         try:
             response = self.send_id(self.marker_id)
             room = response.room
-            print(room)
 
             # reset the feedback list
             self.feedback.locations = []
 
             if room != 'no room associated with this marker id' and room not in self.individuals_list:
+
                 self.marker_list.append(self.marker_id)
-                print(self.marker_list)
                 # saving room cooridnates in a variable of type RoomCoord
                 self.room_coord.room = room
                 self.room_coord.x = response.x
@@ -116,31 +124,36 @@ class ArmControllerServer():
                 self.location_list.append(room)
                 # append all rooms in the list of individuals
                 self.individuals_list.append(room)
-                # add individuals to class to create the ontolgy
-                # declare the new creted individuals as visted to make the timer start counting
+                # add individuals to class to create the ontolgy and start timer for each location
+
                 if room != 'E':
+
                     self.armor_client.manipulation.add_ind_to_class(room, "LOCATION")
-                    print(" Room ", room, " Added to locations")
+                    print("Room ", room, " Added to locations")
                     self.armor_client.manipulation.add_dataprop_to_ind("visitedAt", room, "Long", str(int(time.time())))
+
                 else:
+
                     self.armor_client.manipulation.add_ind_to_class(room, "LOCATION")
                     self.armor_client.manipulation.add_objectprop_to_ind("isIn", "Robot1", room)
-                    print("Robot is in ", room)
+                    print("Room ", room, " Added to locations")
+                    print("Starting Point room ", room)
 
             for connection in response.connections:
+
                 has_door = connection.through_door
                 self.armor_client.manipulation.add_ind_to_class(has_door, "DOOR")
                 # Adding doors to the ontology for the connections
                 self.armor_client.manipulation.add_objectprop_to_ind('hasDoor', room, has_door)
-                print("room ", room, "has door", has_door)
                 self.door_list.append(has_door)
+
                 # put doors in individuals list
                 if has_door not in self.individuals_list:
+
                     self.individuals_list.append(has_door)
-                
-                print(room, " has door " , has_door)
-            print(self.individuals_list)
+
         except rospy.ServiceException as e:
+
             print("Service call failed")
     
     
@@ -157,13 +170,20 @@ class ArmControllerServer():
         pub2.publish(link2)
         pub3.publish(link3)
 
-                                    ###############
-                                    ### Move Arm ##
-    ###############################################################################
+    ###############
+    ### Move Arm ##
+    ###############
+    #------------------------------------------------------------------------------------------------------------#
     def execute_cb(self, goal):
         print(goal)
-        positions = array([['pose0',0.0,0.0,0.0],['pose1',0.2,0.0,-0.7],['pose2',1.5,0.0,0.2],['pose3',1.5,0.0,-0.5],['pose4',2.2,0.0,0.2],['pose5',2.8,0.0,0.4],['pose6',-1.2,0,0.3],['pose7',-1.2,0,-0.5]])
-        print(positions)
+        positions = array([['pose0',0.0,0.0,0.0],
+                           ['pose1',0.2,0.0,-0.7],
+                           ['pose2',1.5,0.0,0.2],
+                           ['pose3',1.5,0.0,-0.5],
+                           ['pose4',2.2,0.0,0.2],
+                           ['pose5',2.8,0.0,0.4],
+                           ['pose6',-1.2,0,0.3],
+                           ['pose7',-1.2,0,-0.5]])
         success = True
         self.result.rooms_info = self.rooms_info
 
@@ -185,6 +205,9 @@ class ArmControllerServer():
                 i = 0
             else:
                 i = i + 1
+        
+        #put the arm in initial configuration
+        self.pub_position(0.0, 0.0, 0.0)
 
         if success:
             self.armor_client.manipulation.disjoint_all_ind(self.individuals_list)

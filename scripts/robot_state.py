@@ -10,10 +10,8 @@ ROS node for implementing the robot state. It includes the current position and 
 Publishes to: 
     /state/battery_low: the boolean stating if the battery is low or not
 
-Service:
-    /state/get_pose: get the robot current pose
-
-    /state/set_pose: set the robot current pose
+Subscribes to:
+    /recharging_status: the boolean stating if the robot is connected to the plug or not
 """
 import threading
 import rospy
@@ -89,7 +87,7 @@ class RobotState:
 
 if __name__ == "__main__":
     """
-    Initialize the robot position in [0,0]. init_robot_pose() function will make the request to the controller server
+    Monitoring the robot battery state.
     """
     RobotState()
     

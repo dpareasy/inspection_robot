@@ -166,9 +166,6 @@ class BehaviorHelper:
             list_of_corridors(str): List of corridors  in the map
 
         """
-        
-
-        #if chosen_target not in list_of_corridors:
         last_visit = client.query.dataprop_b2_ind('visitedAt', chosen_target)
         last_visit = self.clean_strings(2, last_visit)
 
@@ -179,7 +176,7 @@ class BehaviorHelper:
         current_time = str(int(time.time()))
         print(list_of_corridors)
         print(chosen_target)
-        #if chosen_target not in list_of_corridors:
+
         client.manipulation.replace_dataprop_b2_ind('visitedAt', chosen_target, 'Long', current_time, last_visit)
         print(chosen_target, "last visit", last_visit, "current time ", current_time)
 
@@ -199,20 +196,3 @@ class BehaviorHelper:
         client.manipulation.replace_objectprop_b2_ind('isIn', self.agent, self.charging_location, current_location)
         client.utils.sync_buffered_reasoner()
 
-    def survey_room(self):
-         # Define the duration for a full rotation
-        rotation_time = 4.0
-
-        # Define the angular velocity for a full rotation
-        angular_velocity = 2 * 3.14 / rotation_time
-
-        twist = Twist()
-        twist.angular.z = angular_velocity
-
-        # Start rotating
-        self.rotate.publish(twist)
-        time.sleep(rotation_time)
-
-        # Stop rotating
-        twist.angular.z = 0.0
-        self.rotate.publish(twist)

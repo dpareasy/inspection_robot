@@ -54,6 +54,11 @@ class ActionClientHelper:
         # Wait for the action server to be alive.
         self._client.wait_for_server()
 
+##################
+## Move to Goal ##
+##################
+#=======================================================================================================
+
     def send_goal(self, goal):
         """
         Start move_base action server with a new target position. Note this call is not blocking (i.e., asynchronous performed).
@@ -87,7 +92,18 @@ class ActionClientHelper:
         else:
             print("Warning send a new goal, cancel the current request first!")
 
+#################
+## Survey room ##
+#################
+#=======================================================================================================
     def send_request(self, request):
+        """
+        Start surveyor action server with a request. Note this call is not blocking (i.e., asynchronous performed).
+
+        Args:
+            goal(Point): Goal point.
+
+        """
         if not self._is_running:
             self._client.send_goal(request,
                                     done_cb = self._done_callback,
@@ -215,7 +231,7 @@ class InterfaceHelper:
         self.reset_states()
         # Define the callback associated with the speech, gesture, and battery low ROS subscribers.
         rospy.Subscriber('state/battery_low', Bool, self._battery_callback)
-        # Define the clients for the the plan and control action servers.
+        # Define the clients for the the controller and surveyor action servers.
         self.move_base_client = ActionClientHelper('move_base', MoveBaseAction, mutex=self.mutex)
         self.surveyor_client = ActionClientHelper('surveyor', SurveyAction, mutex=self.mutex)
 

@@ -7,16 +7,18 @@
 
 .. moduleauthor:: Davide Leo Parisi <davide.parisi1084@gmail.com>
 
-ROS node for implementing the Finite State Machine.
+ROS node for implementing the policy for choosing the room to visit.
 
 Service:
     /server_name: introspection server for visualization
+
+Publishes:
+    /recharging_status: to simulate robot connection to power
 """
 
 import smach
 import rospy
 import smach_ros
-import time
 import actionlib
 import actionlib.msg
 from inspection_robot.msg import MoveArmGoal, MoveArmAction, MoveArmActionResult, SurveyGoal
@@ -53,7 +55,7 @@ LOOP_SLEEP_TIME = 0.3
 
 class LoadOntology(smach.State):
     """
-    A class to implement the behavior of the decision state of the robot.
+    A class to implement the loading of the map.
     """
     def __init__(self):
 
@@ -81,13 +83,11 @@ class LoadOntology(smach.State):
     def execute(self, userdata):
         """
         Function responsible of the loading of the
-        environment. It calls the LoadMap() function which 
-        is the one responsible of the creation of the environment. 
-        The input parameter `userdata` is not used since no data is 
-        required from the other states.
+        environment. It makes a request to move_arm_as server which 
+        is the one responsible of scannign the aruco markers and creating the ontology. 
 
         Args:
-            userdata: not used
+            userdata: used for output_keys to make the dictionary with rooms' information available to the other states.
 
         Returns:
             TRANS_INITIALIZED(str): transition to the STATE_DECISION
@@ -157,8 +157,6 @@ class DecideTarget(smach.State):
             finally:
                 # Release the mutex to unblock the `self._helper` subscription threads if they are waiting.
                 self._helper.mutex.release()
-            # Wait for a reasonably small amount of time to allow `self._helper` processing stimulus (eventually).
-            #rospy.sleep(LOOP_SLEEP_TIME)
 
 class MoveToTarget(smach.State):
     """
@@ -177,8 +175,7 @@ class MoveToTarget(smach.State):
         Function responsible of the transition between the 
         STATE_MOVING and the STATE_RECHARGING or STATE_DECISION.
         The function will call several functions responsible of 
-        the movement of the robot. It makes a request to the controller
-        server which is the one responsible of the movement.
+        the movement of the robot. It makes a request to move_base action server to make the robot move to the target position.
 
         Args:
             userdata: for input_keys and output_keys to get data and pass data.
@@ -201,7 +198,6 @@ class MoveToTarget(smach.State):
 
         # take the dictionary as an input
         room_coordinates = userdata.rooms[choice]
-        charging_point = userdata.rooms['E']
         
         self._helper.move_base_client.send_goal(room_coordinates)
         print('Coordinates sent')
@@ -241,9 +237,8 @@ class Surveying(State):
     def execute(self, userdata):
         """
         Function responsible of the transition between the 
-        STATE_SURVEY to the STATE_DECISION. It waits a specified amount of time 
-        for the survey of the location and then make tha transition. If the
-        battery is low it suddenly goes to the STATE_RECHARGING
+        STATE_SURVEY to the STATE_DECISION. It sends a request to the surveyor action client which implements the survey behavior. 
+        If the battery is low it suddenly goes to the STATE_RECHARGING.
 
         Args:
             userdata: for input_keys to get data from the other states. 
@@ -258,7 +253,7 @@ class Surveying(State):
         goal = SurveyGoal()
         goal.survey = True
         self._helper.surveyor_client.send_request(goal)
-        
+
         while not rospy.is_shutdown():  # Wait for stimulus from the other nodes of the architecture.            
             self._helper.mutex.acquire()
             # Acquire the mutex to assure data consistencies with the ROS subscription threads managed by `self._helper`.
@@ -292,13 +287,15 @@ class Recharging(State):
     def execute(self, userdata):
         """
         Function responsible of the transition between the 
-        STATE_RECHARGING to the STATE_DECISION.
+        STATE_RECHARGING to the STATE_DECISION. It makes the request to move_base action server to move the robot in 
+        the recharging location. Once in position it simulates the connection to the power for battery recharge by publishing
+        on topic recharging_status to make the battery state starting recharging the battery.
         It waits until the battery is fully charged and then it changes state.
         The battery status is notified by the publisher robot_state. The function called to check the status `is_battery_low()`
         is defined in helper.py.
  
         Args:
-            userdata: not used
+            userdata:  input_keys used to take the rechargin room's information from the dictionary
 
         Returns:
             TRANS_RECHARGED(str): transition to STATE_DECISION
@@ -308,18 +305,23 @@ class Recharging(State):
         charging_point = userdata.rooms['E']
         self._helper.move_base_client.send_goal(charging_point)
         pub = rospy.Publisher('recharging_status', RechStatus, queue_size=10)
+        msg = RechStatus()
+        """
+        RechStatus(): enable recharging
+        """
+        msg.rech_status = True
         while not rospy.is_shutdown():  # Wait for stimulus from the other nodes of the architecture.
             # Acquire the mutex to assure data consistencies with the ROS subscription threads managed by `self._helper`.
             self._helper.mutex.acquire()
             try:
                 # If the battery is no low anymore take the `charged` transition.
-                if self._helper.move_base_client.is_done():
-                    msg = RechStatus()
-                    msg.rech_status = True
+                if self._helper.move_base_client.is_done():                    
                     pub.publish(msg)
                 if not self._helper.is_battery_low():
                     self._helper.reset_states()  # Reset the state variable related to the stimulus.
                     self._behavior.go_to_recharge(current_pose)
+                    msg.rech_status = False
+                    pub.publish(msg)
                     return TRANS_RECHARGED
             finally:
                 # Release the mutex to unblock the `self._helper` subscription threads if they are waiting.
@@ -333,7 +335,6 @@ def main():
     """
     rospy.init_node('state_machine', log_level = rospy.INFO)
     # Initialise an classes to manage the interfaces with the other nodes in the architecture.
-    #ontology = CreateMap()
     helper = InterfaceHelper()
     behavior = BehaviorHelper()
     sm_main = smach.StateMachine([])

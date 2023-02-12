@@ -1,5 +1,21 @@
 #!/usr/bin/env python3
 
+"""
+.. module:: my_state_machine
+   :platform: Unix
+   :synopsis: Python module for implementing the survey action
+
+.. moduleauthor:: Davide Leo Parisi <davide.parisi1084@gmail.com>
+
+ROS node for implementing the survey action.
+
+Service:
+    /surveyor: introspection server for visualization
+
+Publishes:
+    /cmd_vel: to make the robot scan the location
+"""
+
 import rospy
 # Import the ActionServer implementation used.
 from actionlib import SimpleActionServer
@@ -9,6 +25,9 @@ from geometry_msgs.msg import Twist
 import inspection_robot  # This is required to pass the `PlanAction` type for instantiating the `SimpleActionServer`.
 
 class SurveyRoom(object):
+    """
+    A class to implement the survey routine. 
+    """
     def __init__(self):
 
         self._as = SimpleActionServer('surveyor',
@@ -18,6 +37,16 @@ class SurveyRoom(object):
         self._as.start()
     
     def execute_callback(self, goal):
+        """
+        Callback for making the robot scan the whole location after the client request.
+
+        Args:
+            goal: It contains the client request
+
+        Returns:
+            nothing
+
+        """
 
         rate = rospy.Rate(10)
 
@@ -30,13 +59,14 @@ class SurveyRoom(object):
         
         # Publish a twist message to rotate the base link
         twist = Twist()
-        twist.angular.z = 1.0
+        """
+        Twist(): robot velocity
+        """
+        twist.angular.z = 2.0
         pub = rospy.Publisher("cmd_vel", Twist, queue_size=10)
-        print('Culo')
 
         for i in range(200):
             pub.publish(twist)
-            rate.sleep()
 
             # Check if the action has been cancelled by the client
             if self._as.is_preempt_requested():
@@ -44,8 +74,8 @@ class SurveyRoom(object):
                 return
 
         result = SurveyResult()
-        result.result = 'Scanned area'
-        print('goal succeded')
+        result.result = 'SCANNED AREA'
+        print(result.result)
         self._as.set_succeeded(result)
         return
 
