@@ -29,6 +29,16 @@ The following figure represent ìs the model of the robot used in this simulatio
 
 It presents a robotic arm with 3 rotational links and a camera mounted on the end-effector. The base link has two actuated wheels and one castor wheel. The motion is performed with the differential control drive.
 
+### Survey behavior ###
+
+In the following figure the robot in the initial position is presented. As it can be seen the map is not yet explored.
+
+
+
+Here you can see the map after having visited all the rooms and corridors.
+
+
+
 ## Software architecure ##
 
 ### Sequence diagram ###
