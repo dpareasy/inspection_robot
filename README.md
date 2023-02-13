@@ -34,10 +34,12 @@ It presents a robotic arm with 3 rotational links and a camera mounted on the en
 In the following figure the robot in the initial position is presented. As it can be seen the map is not yet explored.
 
 
+![init_pose](https://user-images.githubusercontent.com/92155300/218581607-a721d1b8-0d52-4684-8a7a-a69471a2df48.png)
 
 Here you can see the map after having visited all the rooms and corridors.
 
 
+![map_scanned](https://user-images.githubusercontent.com/92155300/218581617-4fa55d36-abd6-4471-9ccd-b13637821479.png)
 
 ## Software architecure ##
 
