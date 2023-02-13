@@ -52,8 +52,7 @@ The following figure shows the sequence diagram of the project's architecture.
 
 ### Component diagram ###
 The following figure shows the component diagram of the architecture.
-
-![UML_image](https://user-images.githubusercontent.com/92155300/218565713-33b06d23-9a64-4f73-8c48-5460b7220f8c.png)
+![UML_image](https://user-images.githubusercontent.com/92155300/218588930-95678438-597d-47cd-a21b-521a597fe244.png)
 
 ## Project structure ##
 You can refer to the previous version to get information about the whole structure. However, some changes have been performed:
