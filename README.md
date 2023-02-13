@@ -111,7 +111,7 @@ and
 ```
 sudo apt-get install ros-<ros_distro>-navigation
 ```
-5. CLone [Vision opencv](https://github.com/ros-perception/vision_opencv.git) repository in your workspace.
+5. Clone [Vision opencv](https://github.com/ros-perception/vision_opencv.git) repository in your workspace.
 5. Clone [Aruco Ros](https://github.com/CarmineD8/aruco_ros.git) repository in your workspace, and copy the folder `model` in /root/.gazebo/models.
 6. Clone [SLAM gmapping](https://github.com/CarmineD8/SLAM_packages.git) repository in your workspace.
 7. Clone [Move Base](https://github.com/CarmineD8/planning.git) repository in your workspace.
@@ -130,10 +130,11 @@ For what concerns the simulation instead, the following limitations are present:
 
 Considering these limitations, it's evident what can be improved. A general strategy for arm movement would address the first limitation. It is crucial to find the appropriate camera settings to allow an easy recognition of all markers.
 
-Using the `Moveit` tool to control the arm would eliminate the need for publishing on different topics and allow for arm movement using inverse kinematics. 
+Using the [Moveit](https://ros-planning.github.io/moveit_tutorials/doc/getting_started/getting_started.html) tool to control the arm would eliminate the need for publishing on different topics and allow for arm movement using inverse kinematics. 
 
 All the issues with the robot's motion can likely be attributed to the move_base implementation. To prevent the robot from getting stuck in a corner of the room from its starting position, a simple solution was implemented, which involves rotating the base by 180 degrees after all aruco markers have been recognized, using the same logic implemented for the survey action.
 
 
 ## Documentation ##
 You can find [here](https://dpareasy.github.io/inspection_robot/) the whole documentation.
+Two scripts are missing in the documentation `marker_server.cpp` and `marker_detector.cpp`. The first one was already given while the second one has been reused from [another project](https://github.com/CarmineD8/aruco_ros.git).
