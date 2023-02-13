@@ -122,7 +122,7 @@ For what concerns the simulation instead, the following limitations are present:
 
 Considering these limitations, it's evident what can be improved. A general strategy for arm movement would address the first limitation. It is crucial to find the appropriate camera settings to allow an easy recognition of all markers.
 
-Using the ``Moveit` tool to control the arm would eliminate the need for publishing on different topics and allow for arm movement using inverse kinematics. 
+Using the `Moveit` tool to control the arm would eliminate the need for publishing on different topics and allow for arm movement using inverse kinematics. 
 
 All the issues with the robot's motion can likely be attributed to the move_base implementation. To prevent the robot from getting stuck in a corner of the room from its starting position, a simple solution was implemented, which involves rotating the base by 180 degrees after all aruco markers have been recognized, using the same logic implemented for the survey action.
 
