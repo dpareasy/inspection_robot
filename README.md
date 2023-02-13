@@ -34,7 +34,8 @@ It presents a robotic arm with 3 rotational links and a camera mounted on the en
 ### Sequence diagram ###
 
 The following figure shows the sequence diagram of the project's architecture.
-![sequence_diagram](https://user-images.githubusercontent.com/92155300/218547493-26c4bbc9-1393-410b-9112-3bb81b02e348.png)
+![sequence_diagram](https://user-images.githubusercontent.com/92155300/218548198-1710d59b-aad7-48a3-bdfc-e5525ed63c76.png)
+c4bbc9-1393-410b-9112-3bb81b02e348.png)
 
 ## Project structure ##
 You can refer to the previous version to get information about the whole structure. However, some changes have been performed:
