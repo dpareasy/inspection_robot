@@ -41,6 +41,8 @@ Here you can see the map after having visited all the rooms and corridors.
 
 ![map_scanned](https://user-images.githubusercontent.com/92155300/218581617-4fa55d36-abd6-4471-9ccd-b13637821479.png)
 
+The behavior is implemented in such a way that the robot moves through the rooms and corridors of the environment. When it enters a room, the base link rotates 360 in order to scan the location. After finishing the survey action it plans the path to reach the next location to visit. Whenever the battery goes down, the robot stops what it is doing and moves to the recharging location.
+
 ## Software architecure ##
 
 ### Sequence diagram ###
@@ -80,6 +82,11 @@ The modification made to this file has changed the way the ontology is created. 
 * `move_arm_as`: responsible for moving the arm and loading the map.
 * `move_base`: for making the robot move in the environment.
 * `surveyor`: for allowing the robot to scan its surroundings.
+In addition, a new publisher has been added compared to the previous version. It publishes a positive boolean value on the recharging_status topic to trigger the recharge process when the robot reaches the recharging zone.
+
+### The `robot_state` node ###
+
+This node is responsible for managing the battery. It subscribes to the recharging_status topic and initiates the recharging process when it receives a value of `True`. This approach was adopted to prevent the battery from being recharged while the robot is in motion towards the charging location.
 
 ### The `marker_detector` node ###
 
