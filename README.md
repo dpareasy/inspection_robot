@@ -128,3 +128,4 @@ All the issues with the robot's motion can likely be attributed to the move_base
 
 
 ## Documentation ##
+You can find [here](https://dpareasy.github.io/inspection_robot/) the whole documentation
