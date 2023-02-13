@@ -13,6 +13,10 @@ For a comprehensive understanding of the project's architecture, please refer to
 
 Hereafter only the changes with respect to the old version will be pointed out.
 
+## Simulation environment ##
+
+
+
 ## Project structure ##
 You can refer to the previous version to get information about the whole structure. However, some changes have been performed:
 1. `msg/`:
