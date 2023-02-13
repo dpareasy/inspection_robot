@@ -40,9 +40,10 @@ The following figure shows the sequence diagram of the project's architecture.
 ### Component diagram ###
 The following figure shows the component diagram of the architecture.
 
-![UML_image](https://user-images.githubusercontent.com/92155300/218565263-c38cdd39-2ef1-4eab-aa60-b2d65e9c7182.png)
+![UML_image](https://user-images.githubusercontent.com/92155300/218565713-33b06d23-9a64-4f73-8c48-5460b7220f8c.png)
 
-## Project structure ##
+## Projec![Uploading UML_image.png…]()
+t structure ##
 You can refer to the previous version to get information about the whole structure. However, some changes have been performed:
 1. `msg/`:
     * `MarkerList.msg`: message representing the topic in which marker's id are published.
