@@ -37,10 +37,10 @@ You can refer to the previous version to get information about the whole structu
 
 ### The `state_machine` node ###
 
-This file has been modified in such a way that the ontology is no more created using `CreateOntology` class, but the action server `move_arm_as` is now responsible of loading the map. The state machine connects with three different action servers:
-* `move_arm_as`: as mentioned before.
-* `move_base`: to make the robot moving around the environment.
-* `surveyor`: to make the robot scanning the location visited.
+The modification made to this file has changed the way the ontology is created. It is now loaded by the `move_arm_as` action server instead of the `CreateOntology` class. The state machine is connected to three different action servers: 
+* `move_arm_as`: responsible for moving the arm and loading the map.
+* `move_base`: for making the robot move in the environment,.
+* `surveyor`: for allowing the robot to scan its surroundings.
 
 ### The `move_arm_controller` node ###
 
@@ -68,17 +68,30 @@ pip install simple-colors
 ```
 
 8. Install ros control:
-    ```
-    sudo apt-get install ros-[ROS_version]-ros-control ros-[ROS_version]-ros-controllers
-    ```
-     and 
+```
+sudo apt-get install ros-[ROS_version]-ros-control ros-[ROS_version]-ros-controllers
+```
+and 
 
-     ```
-     sudo apt-get install ros-[ROS_version]-gazebo-ros-pkgs ros-[ROS_version]-gazebo-ros-control
-     ```
+```
+sudo apt-get install ros-[ROS_version]-gazebo-ros-pkgs ros-[ROS_version]-gazebo-ros-control
+```
 Some issues have been encountered for creating the ontology. Refer to the 'Installation' section of the [previous version](https://github.com/dpareasy/Assignment1) and follow the procedure to fixe the problem.
 
-### System limitations ###
+## System limitations and possible improvements ##
+
+As regarding the ontology and policy, the same [limitations](https://github.com/dpareasy/Assignment1) presented in the previous version are also valid for this project.
+For what concerns the simulation instead, the following limitations are present:
+* The arm is not moved in a general way around the environment. Thus, the solution implemented is only valid for this specific problem. This choice was driven by the fact that the aruco markers were not perfectly scanned by the camera. To allow a perfect a perfect recognition of the markers, the fov have been reduced so as to frame one marker at a time.
+* The arm is controlled with ros control by publishing the desired position of each joint on the corresponding topic, which results in a larer number of instructions needed for movement.
+* Base link velocity is very low, causing the robot to take about thirty minutes to visit all rooms.
+* The robot may sometimes stop moving and will require the simulation to be restarted. This is likely a bug with move_base. Also, specially from the initial position, the robot gets stuck in a corner of the room.
+
+Considering these limitations, it's evident what can be improved. A general strategy for arm movement would address the first limitation. It is crucial to find the appropriate camera settings to allow an easy recognition of all markers.
+
+Using the ``Moveit` tool to control the arm would eliminate the need for publishing on different topics and allow for arm movement using inverse kinematics. 
+
+All the issues with the robot's motion can likely be attributed to the move_base implementation. To prevent the robot from getting stuck in a corner of the room from its starting position, a simple solution was implemented, which involves rotating the base by 180 degrees after all aruco markers have been recognized, using the same logic implemented for the survey action.
 
 
-## Possible improvements ###
+## Documentation ##
