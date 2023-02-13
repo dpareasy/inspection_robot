@@ -27,7 +27,7 @@ The following figure represent ìs the model of the robot used in this simulatio
 
 ![robot_model](https://user-images.githubusercontent.com/92155300/218351884-d8267a10-3c7e-4cfe-8bc0-c082b8b9c101.png)
 
-It presents a robotic arm with 3 rotational links and a camera mounten on the end-effector. The base link has two actuated wheels and one castor wheel. The motion is performed with the differential control drive.
+It presents a robotic arm with 3 rotational links and a camera mounted on the end-effector. The base link has two actuated wheels and one castor wheel. The motion is performed with the differential control drive.
 
 ## Software architecure ##
 
