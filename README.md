@@ -112,11 +112,22 @@ and
 sudo apt-get install ros-<ros_distro>-navigation
 ```
 5. Clone [Vision opencv](https://github.com/ros-perception/vision_opencv.git) repository in your workspace.
-5. Clone [Aruco Ros](https://github.com/CarmineD8/aruco_ros.git) repository in your workspace, and copy the folder `model` in /root/.gazebo/models.
-6. Clone [SLAM gmapping](https://github.com/CarmineD8/SLAM_packages.git) repository in your workspace.
-7. Clone [Move Base](https://github.com/CarmineD8/planning.git) repository in your workspace.
-8. Follow [Installation & Running](https://github.com/dpareasy/Assignment1) procedure in the readme of the previous version to install all the remaining packages.
-8. Run `catkin_make` from the root of your workspace.
+6. Clone [Aruco Ros](https://github.com/CarmineD8/aruco_ros.git) repository in your workspace, and copy the folder `model` in /root/.gazebo/models.
+7. Clone [SLAM gmapping](https://github.com/CarmineD8/SLAM_packages.git) repository in your workspace.
+8. Clone [Move Base](https://github.com/CarmineD8/planning.git) repository in your workspace.
+9. Follow [Installation & Running](https://github.com/dpareasy/Assignment1) procedure in the readme of the previous version to install all the remaining packages.
+10. Run `catkin_make` from the root of your workspace.
+
+To run the simulation, copy the following two lines in the terminal:
+```
+roslaunch inspection_robot armor.launch
+```
+and 
+```
+roslaunch inspection_robot surveillance.launch
+```
+
+They are launched separately since some problem have arisen by launching them together.
 
 
 ## System limitations & possible improvements ##
