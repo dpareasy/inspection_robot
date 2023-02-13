@@ -166,4 +166,4 @@ All the issues with the robot's motion can likely be attributed to the move_base
 
 ## Documentation ##
 You can find [here](https://dpareasy.github.io/inspection_robot/) the whole documentation.
-Two scripts are missing in the documentation `marker_server.cpp` and `marker_detector.cpp`. The first one was already given while the second one has been reused from [another project](https://github.com/CarmineD8/aruco_ros.git).
+Two scripts are missing in the documentation `marker_server.cpp` and `marker_detector.cpp`. The first one was already given while the second one has been reused from [another project](https://github.com/CarmineD8/aruco_ros.git) named `marker_publish.cpp`.
