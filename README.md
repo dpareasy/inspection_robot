@@ -42,7 +42,6 @@ The following figure shows the sequence diagram of the project's architecture.
 You can refer to the previous version to get information about the whole structure. However, some changes have been performed:
 1. `msg/`:
     * `MarkerList.msg`: message representing the topic in which marker's id are published.
-    * `ReachStatus.msg`: message stating that the charging can start.
     * `RoomConnection.msg`: message containing rooms connections.
     * `RoomCoord.msg`: message containing the room with its coordinates.
 2. `srv/`:
@@ -64,16 +63,25 @@ You can refer to the previous version to get information about the whole structu
 
 The modification made to this file has changed the way the ontology is created. It is now loaded by the `move_arm_as` action server instead of the `CreateOntology` class. The state machine is connected to three different action servers: 
 * `move_arm_as`: responsible for moving the arm and loading the map.
-* `move_base`: for making the robot move in the environment,.
+* `move_base`: for making the robot move in the environment.
 * `surveyor`: for allowing the robot to scan its surroundings.
+
+### The `marker_detector` node ###
+
+This node subscribes to the `camera1/image_raw` topic, where the camera publishes images. A processor then analyzes these images to detect the presence of an Aruco marker. If a marker is recognized, its identification number is then published on the `marker_detector/MarkerList` topic.
+
+### The `marker_server` node ###
+
+This node holds all the information related to each room, including its doors, connections, and position. It implements a ROS server that takes as input the marker identification number and returns all the relevant information about the room associated with that marker. The ROS server serves as a centralized repository for information about each room and allows for efficient retrieval of room-related information.
 
 ### The `move_arm_controller` node ###
 
-This node implements an action server that controls the robotic arm on the vehicle. The arm is moved to different positions to scan for aruco markers in the environment. The control of the arm is achieved by publishing to the joint topics using ROS control. This node receives updates on the markers detected by the camera on the arm via the `marker_detector/MarkerList` topic. With the information on the detected markers, it then queries the `marker_server` to retrieve a list of rooms in the environment and their relevant information, which is used to construct an ontology.
+This node implements an action server that controls the robotic arm on the vehicle. The arm is moved to different positions to scan for aruco markers in the environment. The control of the arm is achieved by publishing to the joint topics using ROS control. This node receives updates on the markers detected by the camera on the arm via the `marker_detector/MarkerList` topic. With the information on the detected markers, it then queries the `marker_server` to retrieve all the relevant information of the room associated with the marker's id, which is used to construct an ontology.
 
 ### The `survey_controller` node ###
 
 This node also implements an action server that controls the scanning process of a reached room. The server publishes to the `/cmd_vel` topic with a specified angular velocity to rotate the base 360 degrees. This allows for a comprehensive scan of the room to gather data and information.
+
 
 ## Installation & Running ##
 
