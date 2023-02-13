@@ -15,6 +15,9 @@ Hereafter only the changes with respect to the old version will be pointed out.
 
 ## Simulation environment ##
 
+In the following figure the simulation environment in GAZEBO is presented. It follows the structure of the previous version.
+![gazebo_environment](https://user-images.githubusercontent.com/92155300/218350489-ad910b79-541b-4446-802a-605465db365f.png)
+
 
 
 ## Project structure ##
