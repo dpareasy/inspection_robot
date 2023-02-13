@@ -18,12 +18,15 @@ Hereafter only the changes with respect to the old version will be pointed out.
 ### Environment ###
 
 In the following figure the simulation environment in GAZEBO is presented. It follows the structure of the previous version.
+
 ![gazebo_environment](https://user-images.githubusercontent.com/92155300/218350489-ad910b79-541b-4446-802a-605465db365f.png)
 
 ### Robot model ###
 
 The following figure represent ìs the model of the robot used in this simulation.
+
 ![robot_model](https://user-images.githubusercontent.com/92155300/218351884-d8267a10-3c7e-4cfe-8bc0-c082b8b9c101.png)
+
 It presents a robotic arm with 3 rotational links and a camera mounten on the end-effector. The base link has two actuated wheels and one castor wheel. The motion is performed with the differential control drive.
 
 ## Software architecure ##
