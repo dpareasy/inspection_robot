@@ -9,15 +9,22 @@
 ROS node for moving a robotic arm and creating the ontology
 
 Service:
-    /move_arm_as: server for moving the arm
+    /room_info: to get rooms information from marker_server node
 
 Publishes:
+
     /insprob/joint1_position_controller/command
+
     /insprob/joint2_position_controller/command
+
     /insprob/joint3_position_controller/command
 
+    /cmd_vel
+
 Subscribes:
+
     /marker_detector/MarkerList
+
 """
 
 import rospy
@@ -45,7 +52,7 @@ global marker_id
 
 class ArmControllerServer():
     """
-    This class is used to move the arm, and create the ontolgy.
+    This class is used to move the arm, and create the ontolgy after having obtained all the information about the environment (rooms, connections, coordinates).
     """
     def __init__(self):
         # Define the  action server
@@ -108,7 +115,11 @@ class ArmControllerServer():
             This callback takes the informations about markers' id. Then it makes the request to the marker server to get informations about the rooms.
             Then it creates the ontology.
 
-            The feedback sent to the state machine contains the rooms' name and their coordinates. 
+            The feedback sent to the state machine contains the rooms' name and their coordinates.
+
+            Args:
+                msg(int): aruco markers' identifier
+
         """
 
         self.marker_id = msg.markers
@@ -171,12 +182,20 @@ class ArmControllerServer():
     def pub_position(self,joint1, joint2, joint3):
         """
         function to publish on the topics of the three joints.
-        This function makes the arm moving in different positions to detect aruco markers. It goes through poses until all the markers have been detected.
+        This function makes the arm moving in different positions to detect aruco markers.
+        
+        Args:
+            joint1(float): desired position for joint1
+
+            joint2(float): desired position for joint2
+            
+            joint3(float): desired position for joint3
         """
 
         link1.data = joint1
         link2.data = joint2
         link3.data = joint3
+
         pub1.publish(link1)
         pub2.publish(link2)
         pub3.publish(link3)
@@ -186,6 +205,12 @@ class ArmControllerServer():
     ###############
     #=============================================================================================================
     def execute_cb(self, goal):
+        """
+        Callback function to move the arm around the environment to detect aruco markers.
+        
+        Args:
+            goal(bool): boolean value statin wheather detection can start or not
+        """
         print(goal)
         positions = array([['pose0',0.0,0.0,0.0],
                            ['pose1',0.2,0.0,-0.7],
@@ -205,6 +230,7 @@ class ArmControllerServer():
             self.a_server.set_aborted()
             return
 
+        # Move the arm through positions
         i = 0
         while size(self.marker_list) <= 6:
             if self.a_server.is_preempt_requested():

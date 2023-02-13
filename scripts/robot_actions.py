@@ -3,7 +3,7 @@
 """
 .. module:: robot_actions
    :platform: Unix
-   :synopsis: Python module for implementing the Finite State Machine
+   :synopsis: Python module for implementing the behavior of the robot
 
 .. moduleauthor:: Davide Leo Parisi <davide.parisi1084@gmail.com>
 

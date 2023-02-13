@@ -11,6 +11,7 @@ ROS node for implementing the policy for choosing the room to visit.
 
 Service:
     /server_name: introspection server for visualization
+    /move_arm_as: server used to load the ontology
 
 Publishes:
     /recharging_status: to simulate robot connection to power
@@ -122,8 +123,7 @@ class DecideTarget(smach.State):
         Function responsible of the transitions between the 
         STATE_DECISION and the STATE_RECHARGING or STATE_MOVING.
         The function will call several functions responsible of
-        the decision state of the robot. It makes a request to the
-        planner server to obtain the path to follow.
+        the decision state of the robot.
 
         Args:
             userdata: used for output_keys to pass data to the other states.
@@ -189,19 +189,13 @@ class MoveToTarget(smach.State):
 
         """
 
-        """
-        ControlGoal: via points to reach the goal 
-        """
-
         current_pose = userdata.current_pose
         choice = userdata.choice
-        #list_of_corridors = userdata.list_of_corridors
 
         # take the dictionary as an input
         room_coordinates = userdata.rooms[choice]
         
         self._helper.move_base_client.send_goal(room_coordinates)
-        print('Coordinates sent')
         while not rospy.is_shutdown():
             # Acquire the mutex to assure data consistencies with the ROS subscription threads managed by `self._helper`.
             self._helper.mutex.acquire()

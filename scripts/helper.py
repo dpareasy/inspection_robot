@@ -13,7 +13,9 @@ Subscribes to:
     /state/battery_low: where the robot_state publishes the battery status.
 
 Service:
-    /state/set_pose: set the current position.
+    /move_base: move the robot around the nevironment
+
+    /surveyor: survey action
 
 """
 
@@ -55,7 +57,7 @@ class ActionClientHelper:
         self._client.wait_for_server()
 
 ##################
-## Move to Goal ##
+## Move to Goal ## Connection to move base.
 ##################
 #=======================================================================================================
 
@@ -97,7 +99,7 @@ class ActionClientHelper:
             print("Warning send a new goal, cancel the current request first!")
 
 #################
-## Survey room ##
+## Survey room ## connection to surveyor server
 #################
 #=======================================================================================================
     def send_request(self, request):
@@ -105,7 +107,7 @@ class ActionClientHelper:
         Start surveyor action server with a request. Note this call is not blocking (i.e., asynchronous performed).
 
         Args:
-            goal(Point): Goal point.
+            request(bool): boolean stating wheather survey action can start or not
 
         """
         if not self._is_running:

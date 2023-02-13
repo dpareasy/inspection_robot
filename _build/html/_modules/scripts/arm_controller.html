@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="python" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>scripts.arm_controller &mdash; inspection_robot 1 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html" class="icon icon-home"> inspection_robot
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">inspection_robot</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">scripts.arm_controller</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for scripts.arm_controller</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">.. module:: arm_controller</span>
+<span class="sd">   :platform: Unix</span>
+<span class="sd">   :synopsis: Python module for Moving the arm and create the ontology</span>
+
+<span class="sd">.. moduleauthor:: Davide Leo Parisi &lt;davide.parisi1084@gmail.com&gt;</span>
+
+<span class="sd">ROS node for moving a robotic arm and creating the ontology</span>
+
+<span class="sd">Service:</span>
+<span class="sd">    /room_info: to get rooms information from marker_server node</span>
+
+<span class="sd">Publishes:</span>
+
+<span class="sd">    /insprob/joint1_position_controller/command</span>
+
+<span class="sd">    /insprob/joint2_position_controller/command</span>
+
+<span class="sd">    /insprob/joint3_position_controller/command</span>
+
+<span class="sd">    /cmd_vel</span>
+
+<span class="sd">Subscribes:</span>
+
+<span class="sd">    /marker_detector/MarkerList</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">rospy</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">std_msgs.msg</span> <span class="kn">import</span> <span class="n">Float64</span>
+<span class="kn">from</span> <span class="nn">geometry_msgs.msg</span> <span class="kn">import</span> <span class="n">Twist</span>
+<span class="kn">import</span> <span class="nn">actionlib</span>
+<span class="kn">from</span> <span class="nn">inspection_robot.msg</span> <span class="kn">import</span> <span class="n">MoveArmAction</span><span class="p">,</span> <span class="n">MoveArmFeedback</span><span class="p">,</span> <span class="n">MoveArmResult</span><span class="p">,</span> <span class="n">MarkerList</span><span class="p">,</span> <span class="n">RoomConnection</span><span class="p">,</span> <span class="n">RoomCoord</span>
+<span class="kn">from</span> <span class="nn">armor_api.armor_client</span> <span class="kn">import</span> <span class="n">ArmorClient</span>
+<span class="kn">from</span> <span class="nn">inspection_robot.srv</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">os.path</span> <span class="kn">import</span> <span class="n">dirname</span><span class="p">,</span> <span class="n">realpath</span>
+
+<span class="n">link1</span> <span class="o">=</span> <span class="n">Float64</span><span class="p">()</span>
+<span class="n">link2</span> <span class="o">=</span> <span class="n">Float64</span><span class="p">()</span>
+<span class="n">link3</span> <span class="o">=</span> <span class="n">Float64</span><span class="p">()</span>
+
+<span class="n">pub1</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">Publisher</span><span class="p">(</span><span class="s1">&#39;/insprob/joint1_position_controller/command&#39;</span><span class="p">,</span> <span class="n">Float64</span><span class="p">,</span> <span class="n">queue_size</span> <span class="o">=</span> <span class="mi">10</span><span class="p">)</span>
+<span class="n">pub2</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">Publisher</span><span class="p">(</span><span class="s1">&#39;/insprob/joint2_position_controller/command&#39;</span><span class="p">,</span> <span class="n">Float64</span><span class="p">,</span> <span class="n">queue_size</span> <span class="o">=</span> <span class="mi">10</span><span class="p">)</span>
+<span class="n">pub3</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">Publisher</span><span class="p">(</span><span class="s1">&#39;/insprob/joint3_position_controller/command&#39;</span><span class="p">,</span> <span class="n">Float64</span><span class="p">,</span> <span class="n">queue_size</span> <span class="o">=</span> <span class="mi">10</span><span class="p">)</span>
+<span class="n">pubVel</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">Publisher</span><span class="p">(</span><span class="s1">&#39;/cmd_vel&#39;</span><span class="p">,</span> <span class="n">Twist</span><span class="p">,</span> <span class="n">queue_size</span> <span class="o">=</span> <span class="mi">10</span><span class="p">)</span>
+
+<span class="k">global</span> <span class="n">marker_id</span>
+
+<div class="viewcode-block" id="ArmControllerServer"><a class="viewcode-back" href="../../index.html#scripts.arm_controller.ArmControllerServer">[docs]</a><span class="k">class</span> <span class="nc">ArmControllerServer</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This class is used to move the arm, and create the ontolgy after having obtained all the information about the environment (rooms, connections, coordinates).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Define the  action server</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">a_server</span> <span class="o">=</span> <span class="n">actionlib</span><span class="o">.</span><span class="n">SimpleActionServer</span><span class="p">(</span><span class="s2">&quot;move_arm_as&quot;</span><span class="p">,</span>
+                                                    <span class="n">MoveArmAction</span><span class="p">,</span>
+                                                    <span class="n">execute_cb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_cb</span><span class="p">,</span>
+                                                    <span class="n">auto_start</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+
+    <span class="c1">##################</span>
+    <span class="c1">### Armor setup ##</span>
+    <span class="c1">##################</span>
+    <span class="c1">#=============================================================================================================</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">armor_client</span> <span class="o">=</span> <span class="n">ArmorClient</span><span class="p">(</span><span class="s2">&quot;assignment&quot;</span><span class="p">,</span> <span class="s2">&quot;my_ontology&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">dirname</span><span class="p">(</span><span class="n">realpath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">))</span>
+        <span class="c1"># Put the path of the file.owl</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">+</span> <span class="s2">&quot;/../../topological_map/&quot;</span>
+        <span class="c1"># Initializing with buffered manipulation and reasoning</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">armor_client</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">load_ref_from_file</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">+</span> <span class="s2">&quot;topological_map.owl&quot;</span><span class="p">,</span> <span class="s2">&quot;http://bnc/exp-rob-lab/2022-23&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">&quot;PELLET&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">armor_client</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">mount_on_ref</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">armor_client</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">set_log_to_terminal</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+        <span class="c1"># Define the subscriber to the topic in which the marker&#39;s id are published</span>
+        <span class="n">rospy</span><span class="o">.</span><span class="n">Subscriber</span><span class="p">(</span><span class="s2">&quot;marker_detector/MarkerList&quot;</span><span class="p">,</span>
+                        <span class="n">MarkerList</span><span class="p">,</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">marker_cb</span><span class="p">)</span>
+
+        <span class="c1"># Client connecting to marker_server to obtain environment&#39;s informations</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">send_id</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">ServiceProxy</span><span class="p">(</span><span class="s1">&#39;/room_info&#39;</span><span class="p">,</span>
+                                         <span class="n">RoomInformation</span><span class="p">)</span>
+        <span class="c1">#Start the server</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">a_server</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+        <span class="c1"># Definition of used variables</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">marker_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">location_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">room_coord</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">door_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rooms_info</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">individuals_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">room_coord</span> <span class="o">=</span> <span class="n">RoomCoord</span><span class="p">()</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        RoomCoord(): cordinates of the rooms</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Feedback from the arm</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">feedback</span> <span class="o">=</span> <span class="n">MoveArmFeedback</span><span class="p">()</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        MoveArmFeedback(): feedback from the arm controller server</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">result</span> <span class="o">=</span> <span class="n">MoveArmResult</span><span class="p">()</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        MoveArmResult(): result from the arm controller server</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">marker_id</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1">######################</span>
+    <span class="c1">### Create Ontology ##</span>
+    <span class="c1">######################</span>
+    <span class="c1">#=============================================================================================================</span>
+<div class="viewcode-block" id="ArmControllerServer.marker_cb"><a class="viewcode-back" href="../../index.html#scripts.arm_controller.ArmControllerServer.marker_cb">[docs]</a>    <span class="k">def</span> <span class="nf">marker_cb</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            This callback takes the informations about markers&#39; id. Then it makes the request to the marker server to get informations about the rooms.</span>
+<span class="sd">            Then it creates the ontology.</span>
+
+<span class="sd">            The feedback sent to the state machine contains the rooms&#39; name and their coordinates.</span>
+
+<span class="sd">            Args:</span>
+<span class="sd">                msg(int): aruco markers&#39; identifier</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">marker_id</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">markers</span>
+        <span class="c1"># Making request to server</span>
+        <span class="n">rospy</span><span class="o">.</span><span class="n">wait_for_service</span><span class="p">(</span><span class="s1">&#39;/room_info&#39;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">send_id</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">marker_id</span><span class="p">)</span>
+            <span class="n">room</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">room</span>
+
+            <span class="c1"># reset the feedback list</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">feedback</span><span class="o">.</span><span class="n">locations</span> <span class="o">=</span> <span class="p">[]</span>
+
+            <span class="k">if</span> <span class="n">room</span> <span class="o">!=</span> <span class="s1">&#39;no room associated with this marker id&#39;</span> <span class="ow">and</span> <span class="n">room</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">individuals_list</span><span class="p">:</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">marker_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">marker_id</span><span class="p">)</span>
+                <span class="c1"># saving room cooridnates in a variable of type RoomCoord</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">room_coord</span><span class="o">.</span><span class="n">room</span> <span class="o">=</span> <span class="n">room</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">room_coord</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">x</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">room_coord</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">y</span>
+                <span class="c1"># Send room&#39;s information as a feedback to the state machine</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">feedback</span><span class="o">.</span><span class="n">locations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">room_coord</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">a_server</span><span class="o">.</span><span class="n">publish_feedback</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">feedback</span><span class="p">)</span>
+                <span class="c1"># update locatin list for the ontology</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">location_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">room</span><span class="p">)</span>
+                <span class="c1"># append all rooms in the list of individuals</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">individuals_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">room</span><span class="p">)</span>
+                <span class="c1"># add individuals to class to create the ontolgy and start timer for each location</span>
+
+                <span class="k">if</span> <span class="n">room</span> <span class="o">!=</span> <span class="s1">&#39;E&#39;</span><span class="p">:</span>
+
+                    <span class="bp">self</span><span class="o">.</span><span class="n">armor_client</span><span class="o">.</span><span class="n">manipulation</span><span class="o">.</span><span class="n">add_ind_to_class</span><span class="p">(</span><span class="n">room</span><span class="p">,</span> <span class="s2">&quot;LOCATION&quot;</span><span class="p">)</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Room &quot;</span><span class="p">,</span> <span class="n">room</span><span class="p">,</span> <span class="s2">&quot; Added to locations&quot;</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">armor_client</span><span class="o">.</span><span class="n">manipulation</span><span class="o">.</span><span class="n">add_dataprop_to_ind</span><span class="p">(</span><span class="s2">&quot;visitedAt&quot;</span><span class="p">,</span> <span class="n">room</span><span class="p">,</span> <span class="s2">&quot;Long&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">())))</span>
+
+                <span class="k">else</span><span class="p">:</span>
+
+                    <span class="bp">self</span><span class="o">.</span><span class="n">armor_client</span><span class="o">.</span><span class="n">manipulation</span><span class="o">.</span><span class="n">add_ind_to_class</span><span class="p">(</span><span class="n">room</span><span class="p">,</span> <span class="s2">&quot;LOCATION&quot;</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">armor_client</span><span class="o">.</span><span class="n">manipulation</span><span class="o">.</span><span class="n">add_objectprop_to_ind</span><span class="p">(</span><span class="s2">&quot;isIn&quot;</span><span class="p">,</span> <span class="s2">&quot;Robot1&quot;</span><span class="p">,</span> <span class="n">room</span><span class="p">)</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Room &quot;</span><span class="p">,</span> <span class="n">room</span><span class="p">,</span> <span class="s2">&quot; Added to locations&quot;</span><span class="p">)</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Starting Point room &quot;</span><span class="p">,</span> <span class="n">room</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">connection</span> <span class="ow">in</span> <span class="n">response</span><span class="o">.</span><span class="n">connections</span><span class="p">:</span>
+
+                <span class="n">has_door</span> <span class="o">=</span> <span class="n">connection</span><span class="o">.</span><span class="n">through_door</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">armor_client</span><span class="o">.</span><span class="n">manipulation</span><span class="o">.</span><span class="n">add_ind_to_class</span><span class="p">(</span><span class="n">has_door</span><span class="p">,</span> <span class="s2">&quot;DOOR&quot;</span><span class="p">)</span>
+                <span class="c1"># Adding doors to the ontology for the connections</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">armor_client</span><span class="o">.</span><span class="n">manipulation</span><span class="o">.</span><span class="n">add_objectprop_to_ind</span><span class="p">(</span><span class="s1">&#39;hasDoor&#39;</span><span class="p">,</span> <span class="n">room</span><span class="p">,</span> <span class="n">has_door</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">door_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">has_door</span><span class="p">)</span>
+
+                <span class="c1"># put doors in individuals list</span>
+                <span class="k">if</span> <span class="n">has_door</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">individuals_list</span><span class="p">:</span>
+
+                    <span class="bp">self</span><span class="o">.</span><span class="n">individuals_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">has_door</span><span class="p">)</span>
+
+        <span class="k">except</span> <span class="n">rospy</span><span class="o">.</span><span class="n">ServiceException</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Service call failed&quot;</span><span class="p">)</span></div>
+    
+    
+<div class="viewcode-block" id="ArmControllerServer.pub_position"><a class="viewcode-back" href="../../index.html#scripts.arm_controller.ArmControllerServer.pub_position">[docs]</a>    <span class="k">def</span> <span class="nf">pub_position</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">joint1</span><span class="p">,</span> <span class="n">joint2</span><span class="p">,</span> <span class="n">joint3</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        function to publish on the topics of the three joints.</span>
+<span class="sd">        This function makes the arm moving in different positions to detect aruco markers.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            joint1(float): desired position for joint1</span>
+
+<span class="sd">            joint2(float): desired position for joint2</span>
+<span class="sd">            </span>
+<span class="sd">            joint3(float): desired position for joint3</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">link1</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">joint1</span>
+        <span class="n">link2</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">joint2</span>
+        <span class="n">link3</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">joint3</span>
+
+        <span class="n">pub1</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="n">link1</span><span class="p">)</span>
+        <span class="n">pub2</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="n">link2</span><span class="p">)</span>
+        <span class="n">pub3</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="n">link3</span><span class="p">)</span></div>
+
+    <span class="c1">###############</span>
+    <span class="c1">### Move Arm ##</span>
+    <span class="c1">###############</span>
+    <span class="c1">#=============================================================================================================</span>
+<div class="viewcode-block" id="ArmControllerServer.execute_cb"><a class="viewcode-back" href="../../index.html#scripts.arm_controller.ArmControllerServer.execute_cb">[docs]</a>    <span class="k">def</span> <span class="nf">execute_cb</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">goal</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Callback function to move the arm around the environment to detect aruco markers.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            goal(bool): boolean value statin wheather detection can start or not</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">goal</span><span class="p">)</span>
+        <span class="n">positions</span> <span class="o">=</span> <span class="n">array</span><span class="p">([[</span><span class="s1">&#39;pose0&#39;</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">],</span>
+                           <span class="p">[</span><span class="s1">&#39;pose1&#39;</span><span class="p">,</span><span class="mf">0.2</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="o">-</span><span class="mf">0.7</span><span class="p">],</span>
+                           <span class="p">[</span><span class="s1">&#39;pose2&#39;</span><span class="p">,</span><span class="mf">1.5</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.2</span><span class="p">],</span>
+                           <span class="p">[</span><span class="s1">&#39;pose3&#39;</span><span class="p">,</span><span class="mf">1.5</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="o">-</span><span class="mf">0.5</span><span class="p">],</span>
+                           <span class="p">[</span><span class="s1">&#39;pose4&#39;</span><span class="p">,</span><span class="mf">2.2</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.2</span><span class="p">],</span>
+                           <span class="p">[</span><span class="s1">&#39;pose5&#39;</span><span class="p">,</span><span class="mf">2.8</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.4</span><span class="p">],</span>
+                           <span class="p">[</span><span class="s1">&#39;pose6&#39;</span><span class="p">,</span><span class="o">-</span><span class="mf">1.2</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mf">0.3</span><span class="p">],</span>
+                           <span class="p">[</span><span class="s1">&#39;pose7&#39;</span><span class="p">,</span><span class="o">-</span><span class="mf">1.2</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="o">-</span><span class="mf">0.5</span><span class="p">]])</span>
+        
+        <span class="n">rate</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">Rate</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+        <span class="n">success</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">result</span><span class="o">.</span><span class="n">rooms_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rooms_info</span>
+
+        <span class="k">if</span> <span class="n">goal</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;no goal has been received&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">a_server</span><span class="o">.</span><span class="n">set_aborted</span><span class="p">()</span>
+            <span class="k">return</span>
+
+        <span class="c1"># Move the arm through positions</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">while</span> <span class="n">size</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">marker_list</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">6</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">a_server</span><span class="o">.</span><span class="n">is_preempt_requested</span><span class="p">():</span>
+                <span class="n">success</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="k">break</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">pub_position</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">positions</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">]),</span> <span class="nb">float</span><span class="p">(</span><span class="n">positions</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">2</span><span class="p">]),</span> <span class="nb">float</span><span class="p">(</span><span class="n">positions</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">3</span><span class="p">]))</span>
+            <span class="n">rospy</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">7</span><span class="p">:</span>
+                <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">i</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span>
+        
+        <span class="c1"># put the arm in initial configuration</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pub_position</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">positions</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]),</span> <span class="nb">float</span><span class="p">(</span><span class="n">positions</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">2</span><span class="p">]),</span> <span class="nb">float</span><span class="p">(</span><span class="n">positions</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">3</span><span class="p">]))</span>
+
+        <span class="c1"># rotate the robot of 90 degrees </span>
+        <span class="n">twist</span> <span class="o">=</span> <span class="n">Twist</span><span class="p">()</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Twist(): robot velocity</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">twist</span><span class="o">.</span><span class="n">angular</span><span class="o">.</span><span class="n">z</span> <span class="o">=</span> <span class="mf">2.0</span> <span class="c1"># rad/sec</span>
+        <span class="n">turn_time</span> <span class="o">=</span> <span class="mf">3.14</span> <span class="c1"># sec</span>
+        <span class="n">start_time</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">Time</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+        <span class="k">while</span> <span class="p">(</span><span class="n">rospy</span><span class="o">.</span><span class="n">Time</span><span class="o">.</span><span class="n">now</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span><span class="p">)</span><span class="o">.</span><span class="n">to_sec</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">turn_time</span><span class="p">:</span>
+            <span class="n">pubVel</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="n">twist</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">success</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">armor_client</span><span class="o">.</span><span class="n">manipulation</span><span class="o">.</span><span class="n">disjoint_all_ind</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">individuals_list</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">armor_client</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">apply_buffered_changes</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">armor_client</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">sync_buffered_reasoner</span><span class="p">()</span>
+            <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">individuals_list</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">a_server</span><span class="o">.</span><span class="n">set_succeeded</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">result</span><span class="p">)</span></div></div>
+
+<span class="k">if</span> <span class="vm">__name__</span><span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+
+    <span class="n">rospy</span><span class="o">.</span><span class="n">init_node</span><span class="p">(</span><span class="s1">&#39;arm_controller&#39;</span><span class="p">)</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">ArmControllerServer</span><span class="p">()</span>
+    <span class="n">rospy</span><span class="o">.</span><span class="n">spin</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Davide Leo Parisi.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
