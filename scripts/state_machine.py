@@ -100,8 +100,6 @@ class LoadOntology(smach.State):
         self.result = self.client.get_result()
         print(self.result.rooms_info)
         userdata.rooms = self.rooms
-        print(userdata.rooms['E'])
-
         return TRANS_INITIALIZED
 
 class DecideTarget(smach.State):

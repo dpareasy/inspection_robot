@@ -39,13 +39,19 @@ from inspection_robot.srv import *
 from os.path import dirname, realpath
 
 link1 = Float64()
+"""
+Float64(): link1 pose
+"""
 link2 = Float64()
+"""
+Float64(): link2 pose
+"""
 link3 = Float64()
+"""
+Float64(): link3 pose
+"""
 
-pub1 = rospy.Publisher('/insprob/joint1_position_controller/command', Float64, queue_size = 10)
-pub2 = rospy.Publisher('/insprob/joint2_position_controller/command', Float64, queue_size = 10)
-pub3 = rospy.Publisher('/insprob/joint3_position_controller/command', Float64, queue_size = 10)
-pubVel = rospy.Publisher('/cmd_vel', Twist, queue_size = 10)
+
 
 global marker_id
 
@@ -103,6 +109,10 @@ class ArmControllerServer():
         """
         MoveArmResult(): result from the arm controller server
         """
+        self.pub1 = rospy.Publisher('/insprob/joint1_position_controller/command', Float64, queue_size = 10)
+        self.pub2 = rospy.Publisher('/insprob/joint2_position_controller/command', Float64, queue_size = 10)
+        self.pub3 = rospy.Publisher('/insprob/joint3_position_controller/command', Float64, queue_size = 10)
+        self.pubVel = rospy.Publisher('/cmd_vel', Twist, queue_size = 10)
         self.marker_id = None
 
     ######################
@@ -117,7 +127,7 @@ class ArmControllerServer():
             The feedback sent to the state machine contains the rooms' name and their coordinates.
 
             Args:
-                msg(int): aruco markers' identifier
+                msg(int): aruco markers' ID
 
         """
 
@@ -195,9 +205,9 @@ class ArmControllerServer():
         link2.data = joint2
         link3.data = joint3
 
-        pub1.publish(link1)
-        pub2.publish(link2)
-        pub3.publish(link3)
+        self.pub1.publish(link1)
+        self.pub2.publish(link2)
+        self.pub3.publish(link3)
 
     ###############
     ### Move Arm ##
@@ -256,7 +266,7 @@ class ArmControllerServer():
         turn_time = 3.14 # sec
         start_time = rospy.Time.now()
         while (rospy.Time.now() - start_time).to_sec() < turn_time:
-            pubVel.publish(twist)
+            self.pubVel.publish(twist)
 
         if success:
             self.armor_client.manipulation.disjoint_all_ind(self.individuals_list)

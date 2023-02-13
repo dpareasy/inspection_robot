@@ -166,8 +166,6 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">get_result</span><span class="p">()</span>
         <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">result</span><span class="o">.</span><span class="n">rooms_info</span><span class="p">)</span>
         <span class="n">userdata</span><span class="o">.</span><span class="n">rooms</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rooms</span>
-        <span class="nb">print</span><span class="p">(</span><span class="n">userdata</span><span class="o">.</span><span class="n">rooms</span><span class="p">[</span><span class="s1">&#39;E&#39;</span><span class="p">])</span>
-
         <span class="k">return</span> <span class="n">TRANS_INITIALIZED</span></div></div>
 
 <div class="viewcode-block" id="DecideTarget"><a class="viewcode-back" href="../../index.html#scripts.state_machine.DecideTarget">[docs]</a><span class="k">class</span> <span class="nc">DecideTarget</span><span class="p">(</span><span class="n">smach</span><span class="o">.</span><span class="n">State</span><span class="p">):</span>
@@ -181,7 +179,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_helper</span> <span class="o">=</span> <span class="n">interface_helper</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_behavior</span> <span class="o">=</span> <span class="n">behavior_helper</span>
         <span class="c1"># Get the environment size from ROS parameters.</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">environment_size</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">get_param</span><span class="p">(</span><span class="s1">&#39;config/environment_size&#39;</span><span class="p">)</span>
+        <span class="c1">#self.environment_size = rospy.get_param(&#39;config/environment_size&#39;)</span>
         <span class="n">smach</span><span class="o">.</span><span class="n">State</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">outcomes</span> <span class="o">=</span> <span class="p">[</span><span class="n">TRANS_RECHARGING</span><span class="p">,</span> <span class="n">TRANS_DECIDED</span><span class="p">],</span> <span class="n">input_keys</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;rooms&#39;</span><span class="p">],</span> <span class="n">output_keys</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;current_pose&#39;</span><span class="p">,</span> <span class="s1">&#39;choice&#39;</span><span class="p">])</span>
 
 <div class="viewcode-block" id="DecideTarget.execute"><a class="viewcode-back" href="../../index.html#scripts.state_machine.DecideTarget.execute">[docs]</a>    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">userdata</span><span class="p">):</span>
@@ -382,7 +380,7 @@
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_helper</span><span class="o">.</span><span class="n">move_base_client</span><span class="o">.</span><span class="n">is_done</span><span class="p">():</span>
 
                     <span class="n">pub</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="n">Bool</span><span class="p">(</span><span class="n">rech_status</span><span class="p">))</span>
-                    
+
                 <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_helper</span><span class="o">.</span><span class="n">is_battery_low</span><span class="p">():</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_helper</span><span class="o">.</span><span class="n">reset_states</span><span class="p">()</span>  <span class="c1"># Reset the state variable related to the stimulus.</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_behavior</span><span class="o">.</span><span class="n">go_to_recharge</span><span class="p">(</span><span class="n">current_pose</span><span class="p">)</span>

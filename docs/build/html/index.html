@@ -51,6 +51,9 @@
 <li><a class="reference internal" href="#scripts.arm_controller.ArmControllerServer.room_coord"><code class="docutils literal notranslate"><span class="pre">ArmControllerServer.room_coord</span></code></a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#scripts.arm_controller.link1"><code class="docutils literal notranslate"><span class="pre">link1</span></code></a></li>
+<li><a class="reference internal" href="#scripts.arm_controller.link2"><code class="docutils literal notranslate"><span class="pre">link2</span></code></a></li>
+<li><a class="reference internal" href="#scripts.arm_controller.link3"><code class="docutils literal notranslate"><span class="pre">link3</span></code></a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#module-scripts.survey_controller">SurveyController Module</a><ul>
@@ -213,7 +216,7 @@ Then it creates the ontology.</p>
 <p>The feedback sent to the state machine contains the rooms' name and their coordinates.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>msg</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) -- aruco markers' identifier</p>
+<dd class="field-odd"><p><strong>msg</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) -- aruco markers' ID</p>
 </dd>
 </dl>
 </dd></dl>
@@ -256,6 +259,39 @@ This function makes the arm moving in different positions to detect aruco marker
 </dl>
 </dd></dl>
 
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="scripts.arm_controller.link1">
+<span class="sig-prename descclassname"><span class="pre">scripts.arm_controller.</span></span><span class="sig-name descname"><span class="pre">link1</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">data:</span> <span class="pre">0.0</span></em><a class="headerlink" href="#scripts.arm_controller.link1" title="Permalink to this definition"></a></dt>
+<dd><p>link1 pose</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>Float64()</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="scripts.arm_controller.link2">
+<span class="sig-prename descclassname"><span class="pre">scripts.arm_controller.</span></span><span class="sig-name descname"><span class="pre">link2</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">data:</span> <span class="pre">0.0</span></em><a class="headerlink" href="#scripts.arm_controller.link2" title="Permalink to this definition"></a></dt>
+<dd><p>link2 pose</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>Float64()</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="scripts.arm_controller.link3">
+<span class="sig-prename descclassname"><span class="pre">scripts.arm_controller.</span></span><span class="sig-name descname"><span class="pre">link3</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">data:</span> <span class="pre">0.0</span></em><a class="headerlink" href="#scripts.arm_controller.link3" title="Permalink to this definition"></a></dt>
+<dd><p>link3 pose</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>Float64()</p>
+</dd>
+</dl>
 </dd></dl>
 
 </div>
