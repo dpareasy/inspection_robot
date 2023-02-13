@@ -8,10 +8,9 @@ Contacts:
 
 
 ## Introduction ##
-This repository houses a software that implements the behavior of a surveillance robot using ROS (Robot Operating System). The code is written in Python and is an improvement over a previous iteration where the simulation was handled through two separate scripts that randomly generated the robot's path through various waypoints. In this updated version, the simulation is carried out using Gazebo and 3D visualization is provided by RViz. The robot is then moved around the simulation environment by using move_base and gmapping.
+This repository houses a software that implements the behavior of a patrol robot using ROS (Robot Operating System). The code is written in Python and is an improvement over a previous iteration where the simulation was handled through two separate scripts that randomly generated the robot's path through various waypoints and made it moving through them. In this updated version, the simulation is carried out using Gazebo and the 3D visualization is provided by RViz. The robot is moved around the simulation environment by using [Move Base](https://github.com/CarmineD8/planning.git) and [SLAM gmapping](https://github.com/CarmineD8/SLAM_packages.git).
 For a comprehensive understanding of the project's architecture, please refer to the [initial version](https://github.com/dpareasy/Assignment1) of the project.
-
-Hereafter only the changes with respect to the old version will be pointed out.
+Hereafter only the changes and inprovements with respect to the old version will be pointed out.
 
 ## Gazebo Simulation ##
 
@@ -42,8 +41,7 @@ The following figure shows the component diagram of the architecture.
 
 ![UML_image](https://user-images.githubusercontent.com/92155300/218565713-33b06d23-9a64-4f73-8c48-5460b7220f8c.png)
 
-## Projec![Uploading UML_image.png…]()
-t structure ##
+## Project structure ##
 You can refer to the previous version to get information about the whole structure. However, some changes have been performed:
 1. `msg/`:
     * `MarkerList.msg`: message representing the topic in which marker's id are published.
@@ -94,18 +92,8 @@ This node also implements an action server that controls the scanning process of
 
 Follow these steps to install the software:
 1. Clone this repository inside your workspace (make sure it is sourced in your .bashrc).
-2. Follow the steps for [aRMOR](https://github.com/EmaroLab/armor/issues/7) and [Smach-ROS](http://wiki.ros.org/smach/Tutorials/Getting%20Started) installation.
-3. Use [armor_api](https://github.com/EmaroLab/armor_py_api) for server requests, clone the repository in your workspace.
-4. Clone inside your workspace the [topological_map](https://github.com/buoncubi/topological_map) repository containing the ontology for this project.
-5. Run `chmod +x <file_name>` for each file inside the scripts folder.
-6. Run `catkin_make` from the root of your workspace.
-7. Install `simple_colors` by copying the following line on your terminal:
-
-```
-pip install simple-colors
-```
-
-8. Install ros control:
+2. Run `chmod +x <file_name>` for each file inside the scripts folder.
+3. Install ros control:
 ```
 sudo apt-get install ros-[ROS_version]-ros-control ros-[ROS_version]-ros-controllers
 ```
@@ -114,9 +102,24 @@ and
 ```
 sudo apt-get install ros-[ROS_version]-gazebo-ros-pkgs ros-[ROS_version]-gazebo-ros-control
 ```
-Some issues have been encountered for creating the ontology. Refer to the 'Installation' section of the [previous version](https://github.com/dpareasy/Assignment1) and follow the procedure to fixe the problem.
+4. clone move_base and slam_gmapping package in your workspace, by typing the following lines in your terminal:
+```
+sudo apt-get install ros-<ros_distro>-openslam-gmapping 
+```
+and 
 
-## System limitations and possible improvements ##
+```
+sudo apt-get install ros-<ros_distro>-navigation
+```
+5. CLone [Vision opencv](https://github.com/ros-perception/vision_opencv.git) repository in your workspace.
+5. Clone [Aruco Ros](https://github.com/CarmineD8/aruco_ros.git) repository in your workspace, and copy the folder `model` in /root/.gazebo/models.
+6. Clone [SLAM gmapping](https://github.com/CarmineD8/SLAM_packages.git) repository in your workspace.
+7. Clone [Move Base](https://github.com/CarmineD8/planning.git) repository in your workspace.
+8. Follow [Installation & Running](https://github.com/dpareasy/Assignment1) procedure in the readme of the previous version to install all the remaining packages.
+8. Run `catkin_make` from the root of your workspace.
+
+
+## System limitations & possible improvements ##
 
 As regarding the ontology and policy, the same [limitations](https://github.com/dpareasy/Assignment1) presented in the previous version are also valid for this project.
 For what concerns the simulation instead, the following limitations are present:

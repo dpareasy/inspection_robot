@@ -46,7 +46,7 @@
   <!-- Start Rviz -->  
   <node name="joint_state_publisher_gui" pkg="joint_state_publisher_gui" type="joint_state_publisher_gui" ></node>
   <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" /> 
-  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find robot_urdf)/config/robot_config.rviz" />
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find inspection_robot)/config/robot_config.rviz" />
 	
   <!-- start gazebo client -->
   <group if="$(arg gui)">
