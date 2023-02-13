@@ -27,6 +27,7 @@ The following figure represent ìs the model of the robot used in this simulatio
 
 ![robot_model](https://user-images.githubusercontent.com/92155300/218351884-d8267a10-3c7e-4cfe-8bc0-c082b8b9c101.png)
 
+
 It presents a robotic arm with 3 rotational links and a camera mounted on the end-effector. The base link has two actuated wheels and one castor wheel. The motion is performed with the differential control drive.
 
 ## Software architecure ##
@@ -35,6 +36,10 @@ It presents a robotic arm with 3 rotational links and a camera mounted on the en
 
 The following figure shows the sequence diagram of the project's architecture.
 ![sequence_diagram](https://user-images.githubusercontent.com/92155300/218548198-1710d59b-aad7-48a3-bdfc-e5525ed63c76.png)
+
+### Component diagram ###
+The following figure shows the component diagram of the architecture.
+![UML_image](https://user-images.githubusercontent.com/92155300/218562921-2269a7f5-8e3e-4b23-8bfd-11c2c9bcc64a.png)
 
 ## Project structure ##
 You can refer to the previous version to get information about the whole structure. However, some changes have been performed:
