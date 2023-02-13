@@ -25,8 +25,8 @@ import actionlib.msg
 from inspection_robot.msg import MoveArmGoal, MoveArmAction, MoveArmActionResult, SurveyGoal
 from smach import State
 from helper import InterfaceHelper
+from std_msgs.msg import Bool
 from robot_actions import BehaviorHelper
-from inspection_robot.msg import RechStatus
 from armor_api.armor_client import ArmorClient
 
 client = ArmorClient("assignment", "my_ontology") 
@@ -303,24 +303,25 @@ class Recharging(State):
         current_pose = userdata.current_pose
         charging_point = userdata.rooms['E']
         self._helper.move_base_client.send_goal(charging_point)
-        pub = rospy.Publisher('recharging_status', RechStatus, queue_size=10)
-        msg = RechStatus()
+        pub = rospy.Publisher('recharging_status', Bool, queue_size=10)
         """
         RechStatus(): enable recharging
         """
-        msg.rech_status = True
+        rech_status = True
         while not rospy.is_shutdown():  # Wait for stimulus from the other nodes of the architecture.
             # Acquire the mutex to assure data consistencies with the ROS subscription threads managed by `self._helper`.
             self._helper.mutex.acquire()
             try:
                 # If the battery is no low anymore take the `charged` transition.
-                if self._helper.move_base_client.is_done():                    
-                    pub.publish(msg)
+                if self._helper.move_base_client.is_done():
+
+                    pub.publish(Bool(rech_status))
+                    
                 if not self._helper.is_battery_low():
                     self._helper.reset_states()  # Reset the state variable related to the stimulus.
                     self._behavior.go_to_recharge(current_pose)
-                    msg.rech_status = False
-                    pub.publish(msg)
+                    rech_status = False
+                    pub.publish(Bool(rech_status))
                     return TRANS_RECHARGED
             finally:
                 # Release the mutex to unblock the `self._helper` subscription threads if they are waiting.

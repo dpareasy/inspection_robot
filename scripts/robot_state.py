@@ -16,7 +16,6 @@ Subscribes to:
 import threading
 import rospy
 from std_msgs.msg import Bool
-from inspection_robot.msg import RechStatus
 from helper import InterfaceHelper
 
 global ok_battery
@@ -37,7 +36,7 @@ class RobotState:
         # Initialise battery level.
         self._battery_low = False
         # Start publisher on a separate thread.
-        rospy.Subscriber('recharging_status', RechStatus, self.callback)
+        rospy.Subscriber('recharging_status', Bool, self.callback)
         th = threading.Thread(target = self.is_battery_low_)
         th.start()
 
@@ -51,9 +50,8 @@ class RobotState:
         self.random_battery_notifier_(publisher)
 
     def callback(self, data):
-        #print(data.rech_status)
         global ok_battery
-        ok_battery = data.rech_status
+        ok_battery = data.data
 
     def random_battery_notifier_(self, publisher):
         """
@@ -79,7 +77,7 @@ class RobotState:
                 delay = 10
             else:
                 print("Robot got fully charged battery after" , delay , "seconds")
-                delay = 100
+                delay = 20
             # Wait for simulate battery usage.
             rospy.sleep(delay)
             # Change battery state.

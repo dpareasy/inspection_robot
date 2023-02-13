@@ -28,7 +28,6 @@ Subscribes:
 """
 
 import rospy
-import random
 import time
 from numpy import *
 from std_msgs.msg import Float64
@@ -248,7 +247,7 @@ class ArmControllerServer():
         # put the arm in initial configuration
         self.pub_position(float(positions[0][1]), float(positions[0][2]), float(positions[0][3]))
 
-        # rotate the robot of 90 degrees 
+        # rotate the robot 90 degrees 
         twist = Twist()
         """
         Twist(): robot velocity
