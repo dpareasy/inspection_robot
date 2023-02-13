@@ -115,7 +115,7 @@ class DecideTarget(smach.State):
         self._helper = interface_helper
         self._behavior = behavior_helper
         # Get the environment size from ROS parameters.
-        self.environment_size = rospy.get_param('config/environment_size')
+        #self.environment_size = rospy.get_param('config/environment_size')
         smach.State.__init__(self, outcomes = [TRANS_RECHARGING, TRANS_DECIDED], input_keys = ['rooms'], output_keys = ['current_pose', 'choice'])
 
     def execute(self, userdata):
@@ -316,7 +316,7 @@ class Recharging(State):
                 if self._helper.move_base_client.is_done():
 
                     pub.publish(Bool(rech_status))
-                    
+
                 if not self._helper.is_battery_low():
                     self._helper.reset_states()  # Reset the state variable related to the stimulus.
                     self._behavior.go_to_recharge(current_pose)

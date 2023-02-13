@@ -113,4 +113,13 @@
       <param name="lasamplestep" value="0.005"/>
       <param name="transform_publish_period" value="0.0005"/>
     </node>
+
+
+   <node name="marker_server" pkg="inspection_robot" type="marker_server" />
+   <node pkg = "inspection_robot" type = "state_machine.py" name = "state_machine" output = "screen" launch-prefix="xterm -e"> </node>
+   <node pkg = "inspection_robot" type = "arm_controller.py" name = "arm_controller" output = "screen" launch-prefix="xterm -e"> </node>
+   <node pkg = "inspection_robot" type = "robot_state.py" name = "robot_state" output = "screen" launch-prefix="xterm -e"> </node>
+   <node pkg="inspection_robot" type="marker_detector" name="marker_detector"  output = "screen" launch-prefix="xterm -e"> </node>
+   <node pkg="inspection_robot" type="survey_controller.py" name="survey_controller"  output = "screen" launch-prefix="xterm -e"> </node>
+
 </launch>

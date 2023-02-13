@@ -1,13 +1,5 @@
 <?xml version="1.0"?>
 <launch>
-	
-
-   <rosparam param="state/initial_pose"> [ 0.0,  0.0] </rosparam>
-   <rosparam param="config/environment_size"> [10.0, 10.0] </rosparam>
-   <rosparam param="test/random_plan_points"> [2, 8] </rosparam>
-   <rosparam param="test/random_plan_time"> [0.2, 0.8] </rosparam>
-   <rosparam param="test/random_motion_time"> [0.1, 1.0] </rosparam>
-
 
    <node name="marker_server" pkg="inspection_robot" type="marker_server" />
    <node pkg = "inspection_robot" type = "state_machine.py" name = "state_machine" output = "screen" launch-prefix="xterm -e"> </node>
@@ -16,5 +8,4 @@
    <node pkg="inspection_robot" type="marker_detector" name="marker_detector"  output = "screen" launch-prefix="xterm -e"> </node>
    <node pkg="inspection_robot" type="survey_controller.py" name="survey_controller"  output = "screen" launch-prefix="xterm -e"> </node>
 
-   <!--node pkg = "arch_skeleton" type = "controller.py" name = "controller" output = "screen" launch-prefix="xterm -e"> </node-->
 </launch>

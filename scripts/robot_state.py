@@ -77,7 +77,7 @@ class RobotState:
                 delay = 10
             else:
                 print("Robot got fully charged battery after" , delay , "seconds")
-                delay = 20
+                delay = 180
             # Wait for simulate battery usage.
             rospy.sleep(delay)
             # Change battery state.
